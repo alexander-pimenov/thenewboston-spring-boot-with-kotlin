@@ -13,13 +13,14 @@ group = "tv.codealong.tutorials.springboot"
 version = "0.0.1-SNAPSHOT"
 
 val javaVersion = JavaVersion.VERSION_11
-val springmockkVersion = "4.0.2"
+val springmockkVersion = "3.1.2"
 val mockkVersion = "1.13.4"
+val kotlinVersion = "1.7.10"
 
 java.sourceCompatibility = javaVersion
 java.targetCompatibility = javaVersion
 
-extra["kotlin.version"] = "1.7.10"
+extra["kotlin.version"] = kotlinVersion
 
 repositories {
     mavenLocal()
@@ -30,6 +31,7 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-devtools")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
     runtimeOnly("org.jetbrains.kotlin:kotlin-bom")
@@ -38,6 +40,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.mockk:mockk:${mockkVersion}")
     testImplementation("com.ninja-squad:springmockk:${springmockkVersion}")
+
 }
 
 tasks.withType<KotlinCompile> {
