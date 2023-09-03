@@ -14,7 +14,7 @@ version = "0.0.1-SNAPSHOT"
 
 val javaVersion = JavaVersion.VERSION_11
 val springmockkVersion = "3.1.2"
-val mockkVersion = "1.13.4"
+val mockkVersion = "1.13.4" //1.10.4
 val kotlinVersion = "1.7.10"
 
 java.sourceCompatibility = javaVersion

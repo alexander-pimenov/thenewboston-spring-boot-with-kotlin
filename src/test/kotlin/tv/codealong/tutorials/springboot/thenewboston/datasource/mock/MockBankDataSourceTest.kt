@@ -1,6 +1,6 @@
 package tv.codealong.tutorials.springboot.thenewboston.datasource.mock
 
-import org.assertj.core.api.Assertions.*
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 internal class MockBankDataSourceTest {
@@ -13,6 +13,7 @@ internal class MockBankDataSourceTest {
         val banks = mockDataSource.retrieveBanks()
 
         // then
+        assertThat(banks).isNotEmpty
         assertThat(banks.size).isGreaterThanOrEqualTo(3)
     }
 

@@ -2,6 +2,9 @@ package tv.codealong.tutorials.springboot.thenewboston.datasource
 
 import tv.codealong.tutorials.springboot.thenewboston.model.Bank
 
+/**
+ * Интерфейс для работы с данными по банкам.
+ */
 interface BankDataSource {
 
     fun retrieveBanks(): Collection<Bank>

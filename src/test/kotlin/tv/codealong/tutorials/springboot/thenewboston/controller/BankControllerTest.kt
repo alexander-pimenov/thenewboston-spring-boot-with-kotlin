@@ -21,6 +21,9 @@ internal class BankControllerTest @Autowired constructor(
     val objectMapper: ObjectMapper
 ) {
 
+//    @Autowired
+//    lateinit var mockMvc: MockMvc
+
     val baseUrl = "/api/banks"
 
     @Nested

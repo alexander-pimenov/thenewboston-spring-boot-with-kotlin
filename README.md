@@ -2,6 +2,8 @@
 
 The presented application is considered in the video tutorial [Spring Boot with Kotlin & JUnit 5](https://www.youtube.com/watch?v=TJcshrJOnsE&list=PL6gx4Cwl9DGDPsneZWaOFg0H2wsundyGr)
 
+Остановился на 8 видео [Spring Boot with Kotlin & JUnit 5 - Tutorial 8 - GET Single Bank](https://www.youtube.com/watch?v=jiv37i503v4)
+
 ### Reference Documentation
 For further reference, please consider the following sections:
 

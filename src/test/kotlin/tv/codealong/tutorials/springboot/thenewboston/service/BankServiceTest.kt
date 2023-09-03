@@ -1,5 +1,6 @@
 package tv.codealong.tutorials.springboot.thenewboston.service
 
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
@@ -13,6 +14,10 @@ internal class BankServiceTest {
 
     @Test
     fun `should call its data source to retrieve banks`() {
+        // given - этот блок здесь сейчас не нужен, т.к. мы добавили (relaxed = true)
+        //и по дефолту возвращается emptyList()
+        //every { dataSource.retrieveBanks() } returns emptyList()
+
         // when
         bankService.getBanks()
 
