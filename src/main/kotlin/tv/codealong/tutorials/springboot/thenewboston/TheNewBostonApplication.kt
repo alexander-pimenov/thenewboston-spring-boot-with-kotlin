@@ -7,11 +7,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.web.client.RestTemplate
 
 @SpringBootApplication
-class TheNewBostonApplication {
-
-	@Bean
-	fun restTemplate(builder: RestTemplateBuilder): RestTemplate = builder.build()
-}
+class TheNewBostonApplication
 
 fun main(args: Array<String>) {
 	runApplication<TheNewBostonApplication>(*args)

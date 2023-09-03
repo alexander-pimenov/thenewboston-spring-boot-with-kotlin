@@ -1,6 +1,8 @@
 package tv.codealong.tutorials.springboot.thenewboston.controller
 
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
@@ -12,9 +14,14 @@ import java.time.format.DateTimeFormatter
 @RequestMapping("/api/hello")
 class HelloWorldController {
 
-    @GetMapping
+    @GetMapping("/1")
     @ResponseStatus(HttpStatus.OK)
-    fun helloWorld(): String = "Hello, this is a REST endpoint! It's ${parseTimeToString(LocalDateTime.now())} o'clock now."
+    fun helloWorld1(): String =
+        "Hello, this is a REST endpoint! It's ${parseTimeToString(LocalDateTime.now())} o'clock now."
+
+    @GetMapping(value = ["/2"], produces = [MediaType.APPLICATION_JSON_VALUE])
+    fun helloWorld2(): ResponseEntity<String> =
+        ResponseEntity.ok().body("Hello, this is a REST endpoint! It's ${parseTimeToString(LocalDateTime.now())} o'clock now.")
 
     /**
      * Преобразовывает строковое представление времени вида "1986-04-08 12:30:15" в тип LocalDateTime
