@@ -1,4 +1,9 @@
 server:
   port: 9000
 
+another:
+  host: ${ANOTHER_HOST:http://localhost}
+  port: ${ANOTHER_PORT:9090}
+  timeout: ${ANOTHER_TIMEOUT:60000}
+
 
