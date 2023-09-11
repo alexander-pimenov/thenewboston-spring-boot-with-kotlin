@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Configuration
 import java.beans.ConstructorProperties
 
 
-@Configuration
 @ConstructorBinding
 @ConfigurationProperties(prefix = "another")
 class AnotherWebClientProperties(
