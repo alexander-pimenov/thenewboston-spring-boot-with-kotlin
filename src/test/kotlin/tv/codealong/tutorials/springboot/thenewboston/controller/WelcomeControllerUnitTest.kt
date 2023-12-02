@@ -2,6 +2,7 @@ package tv.codealong.tutorials.springboot.thenewboston.controller
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.mockito.Mockito.`when`
@@ -12,6 +13,7 @@ Spring Boot Testing a REST Controller with Unit, Integration & Acceptance Tests
 https://www.youtube.com/watch?v=aEW8ZH6wj2o&t=2s
 https://github.com/kriscfoster/spring-boot-testing-pyramid/tree/master/src
 */
+@DisplayName("Пример Unit-тестирования контроллера")
 internal class WelcomeControllerUnitTest{
 
     lateinit var welcomeController: WelcomeController

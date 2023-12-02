@@ -3,6 +3,7 @@ package tv.codealong.tutorials.springboot.thenewboston.controller
 import org.hamcrest.Matchers
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -25,6 +26,7 @@ https://github.com/kriscfoster/spring-boot-testing-pyramid/tree/master/src
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
 @AutoConfigureMockMvc
+@DisplayName("Пример Acceptance-тестирования контроллера")
 internal class WelcomeControllerAcceptanceTest @Autowired constructor(private val mockMvc: MockMvc) {
 
     @LocalServerPort
