@@ -8,6 +8,7 @@ import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import tv.codealong.tutorials.springboot.thenewboston.service.WelcomeService
 
+
 /*
 Spring Boot Testing a REST Controller with Unit, Integration & Acceptance Tests
 https://www.youtube.com/watch?v=aEW8ZH6wj2o&t=2s
@@ -35,4 +36,7 @@ internal class WelcomeControllerUnitTest{
     fun shouldGetCustomWelcomeMessage() {
         assertEquals("Welcome John!", welcomeController.welcome("John"))
     }
+
+
+
 }
