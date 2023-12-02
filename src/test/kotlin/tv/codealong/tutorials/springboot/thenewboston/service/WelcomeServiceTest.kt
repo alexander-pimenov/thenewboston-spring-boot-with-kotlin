@@ -10,14 +10,14 @@ internal class WelcomeServiceTest {
     private val welcomeService: WelcomeService = WelcomeService()
 
     @ParameterizedTest(name = "Greeting of {0} should be {1}")
-    @MethodSource("squares")
+    @MethodSource("names")
     fun `Different names`(input: String, expected: String) {
         assertEquals(expected, welcomeService.getWelcomeMessage(input))
     }
 
     companion object {
         @JvmStatic
-        fun squares() = listOf(
+        fun names() = listOf(
             Arguments.of("Sasha", "Welcome Sasha!"),
             Arguments.of("Boss", "Welcome Boss!"),
             Arguments.of("Gosha", "Welcome Gosha!")
