@@ -41,6 +41,11 @@ dependencies {
     testImplementation("io.mockk:mockk:${mockkVersion}")
     testImplementation("com.ninja-squad:springmockk:${springmockkVersion}")
 
+    //implementation(kotlin("stdlib-jdk8"))
+//    если бы не использовал spring boot , то можно так подключить зависимости для тестов
+//    testImplementation("org.junit.jupiter:junit-jupiter:5.9.1")
+//    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
 }
 
 tasks.withType<KotlinCompile> {
