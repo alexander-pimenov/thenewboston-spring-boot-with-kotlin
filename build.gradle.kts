@@ -30,6 +30,9 @@ repositories {
 }
 
 dependencies {
+    //корутины
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
+
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-devtools")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
