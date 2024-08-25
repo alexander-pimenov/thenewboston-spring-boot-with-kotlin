@@ -1,0 +1,5 @@
+Корутины
+https://www.youtube.com/watch?v=ITLe4FIrrTg
+
+Курс Kotlin Coroutines
+https://www.youtube.com/watch?v=YD2GeSEJQtI&list=PL0SwNXKJbuNmsKQW9mtTSxNn00oJlYOLA&index=3
