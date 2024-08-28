@@ -8,7 +8,7 @@ import kotlin.system.measureTimeMillis
  * https://youtu.be/ITLe4FIrrTg
  *
  */
-class CoroutinesLaunchBuilderExampleExample {
+class CoroutinesLaunchBuilderExampleExampleJob {
 
 }
 
@@ -26,15 +26,23 @@ class CoroutinesLaunchBuilderExampleExample {
  *
  */
 suspend fun main(): Unit = coroutineScope {
-    launch {
+    val job1 = launch {
         delay(2000)
         println("Text 1")
     }
-    launch {
+    val job2 = launch {
         delay(500)
         println("Text 2")
     }
+    job1.join()
+    job2.join()
+    println("Done") // Вызов join() убивает корутину
+
+    println("job1: ${job1.isActive}") // false
+    println("job: ${job2.isCompleted}") // true
+
 }
+
 
 
 
