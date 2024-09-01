@@ -1,8 +1,6 @@
 package tv.codealong.tutorials.springboot.thenewboston.corootines
 
 import kotlinx.coroutines.*
-import java.util.Random
-import kotlin.system.measureTimeMillis
 
 /**
  * https://youtu.be/ITLe4FIrrTg
@@ -35,19 +33,19 @@ class CoroutinesLaunchBuilderExampleExampleJob2 {
  */
 suspend fun main(): Unit = coroutineScope {
     // Создаем КорутинКонтекст на основе двух Элементов: CoroutineName и Job - родительская корутина.
-    val name1 = CoroutineName("Some Name 1")
-    val job = Job()
+    val name = CoroutineName("Some Name 1")
+    val job = Job() //считаем что это родительский Job
 
-    launch( context = name1 + job) {
+    // ВАЖНО: При создании новой корутины всегда будет создаваться новый Job, который наследуется от
+    // родительского Job.
+    launch(name + job) {
         val childName = coroutineContext[CoroutineName.Key]
+        println("1) ${childName == name}") // true
 
-
+        val childJob = coroutineContext[Job.Key]
+        println("2) ${childJob == job}") //false
+        println("3) ${childJob == job.children.first()}") // true
     }
-
-    // Создаем 2-й КорутинКонтекст на основе первого (берем всё от него) и присваиваем новое CoroutineName
-    // (оно переопределяет имя из первой, скорее затирает значения от первой корутины родителя) и Job от контекста
-    // родителя - вторая корутина.
-
 }
 
 
