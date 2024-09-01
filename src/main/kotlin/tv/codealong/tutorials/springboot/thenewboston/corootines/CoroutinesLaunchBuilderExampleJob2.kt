@@ -25,7 +25,7 @@ class CoroutinesLaunchBuilderExampleExampleJob2 {
  * принцип structured concurrency)
  *
  * Здесь особенность Job - это контекст корутины.
- * При создании новой корутины у нас наследуются все Элементы из родительской корутины,
+ * При создании новой корутины у нас наследуются все Элементы из КорутинКонтекста из родительской корутины,
  * кроме Job!!! Для каждой корутины создается свой инстанс Job, который потом будет заасайнен в
  * КорутинКонтекст. Но этот Job будет наследоваться от Job родителя.
  *
@@ -39,6 +39,7 @@ suspend fun main(): Unit = coroutineScope {
     val job = Job()
 
     launch( context = name1 + job) {
+        val childName = coroutineContext[CoroutineName.Key]
 
 
     }
