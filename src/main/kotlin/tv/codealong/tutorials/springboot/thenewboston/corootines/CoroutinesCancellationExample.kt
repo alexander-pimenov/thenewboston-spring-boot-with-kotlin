@@ -1,5 +1,10 @@
 package tv.codealong.tutorials.springboot.thenewboston.corootines
 
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
 /**
  * Они являются расширениями к типу CoroutineScope:
  * fun CoroutineScope.launch()
@@ -74,4 +79,26 @@ package tv.codealong.tutorials.springboot.thenewboston.corootines
  *
  */
 class CoroutinesCancellationExample {
+}
+
+suspend fun main(): Unit = coroutineScope {
+    //тут начинает работать основная корутина
+
+    //тут запускаем дочернюю корутину, но в неё ничего не передаем
+    val job = launch {
+        repeat(10) { i ->
+            //тут дочернюю корутину задерживаем на 100 мс
+            delay(100)
+            println("index: $i")
+        }
+    }
+
+    //тут основная корутина задерживается на 320 мс
+    delay(320)
+    //тут отменяем основную корутину и она отменяет дочернюю, это видно
+    //по тому, что всего два раза напечатается:
+    //index: 0
+    //index: 1
+    job.cancelAndJoin()
+    println("Cancelled")
 }
