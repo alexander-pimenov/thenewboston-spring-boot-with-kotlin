@@ -42,7 +42,10 @@ class KafkaMessageListener(
 
     override fun getPhase(): Int = 0
 
-    @KafkaListener(topics = ["bpmx-procces"], groupId = "my-group")
+    @KafkaListener(
+        topics = ["bpmx-procces"],
+        groupId = "my-group"
+    )
     fun listen(message: String) {
         val deploymentId = extractDeploymentIdFromMessage(message)
         if (downloadedSchemas.containsKey(deploymentId)) {
