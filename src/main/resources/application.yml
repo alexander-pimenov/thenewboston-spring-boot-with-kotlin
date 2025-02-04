@@ -6,4 +6,12 @@ another:
   port: ${ANOTHER_PORT:9090}
   timeout: ${ANOTHER_TIMEOUT:60000}
 
-
+spring:
+  kafka:
+    producer:
+      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+      acks: all
+      retries: Integer.MAX_VALUE
+      enable-idempotence: true
+      max-in-flight-requests-per-connection: 1
+      ssl-provider: none
