@@ -2,7 +2,6 @@ package tv.codealong.tutorials.springboot.thenewboston.kafka
 
 import org.springframework.context.SmartLifecycle
 import org.springframework.kafka.annotation.KafkaListener
-import org.springframework.kafka.listener.MessageListenerContainer
 import org.springframework.kafka.listener.KafkaMessageListenerContainer
 import org.springframework.stereotype.Service
 import java.util.concurrent.ConcurrentHashMap
