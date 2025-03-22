@@ -1,12 +1,12 @@
 package tv.codealong.tutorials.springboot.thenewboston.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.ConstructorBinding
+import org.springframework.boot.context.properties.bind.ConstructorBinding
 import org.springframework.context.annotation.Configuration
 import java.beans.ConstructorProperties
 
 
-@ConstructorBinding
+//@ConstructorBinding
 @ConfigurationProperties(prefix = "another")
 class AnotherWebClientProperties(
     val host: String,
