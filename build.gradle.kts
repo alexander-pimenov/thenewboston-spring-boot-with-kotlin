@@ -113,6 +113,10 @@ kotlin {
     }
 }
 
+kotlin {
+    jvmToolchain(21)
+}
+
 allOpen {
     annotation("jakarta.persistence.Entity")
     annotation("jakarta.persistence.MappedSuperclass")
