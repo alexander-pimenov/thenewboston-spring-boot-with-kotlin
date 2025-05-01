@@ -1,0 +1,13 @@
+Многопоточность глазами разработчика
+Eugene Suleimanov
+https://youtu.be/m-7EljqdxpA
+
+
+Лекция 11. Многопоточность в Java
+Tagir Valeev
+https://youtu.be/ShzQJUFzq58
+
+Лекция 12. Примитивы синхронизации и конкурентные коллекции
+Tagir Valeev
+https://youtu.be/5YLA29EybMo
+

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 
 /**
-* метод для сравнения JSON-ов по содержимому, в не зависимости расположения элементов
+* Функция для сравнения JSON-ов по содержимому, в не зависимости расположения элементов
 * содержимого.
 */
 
