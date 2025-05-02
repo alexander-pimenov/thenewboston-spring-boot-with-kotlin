@@ -7,7 +7,7 @@ import java.util.stream.Stream;
  * Создание потока это дорогостоящая операция и может занимать десятки-сотни микросекунд.
  * И в данном примере пока создается второй поток, первый может уже отработать и завершиться, и
  * мы не сможем протестировать нормально метод doOnce.
- *
+ * <p>
  * https://youtu.be/5YLA29EybMo?t=4124
  */
 
@@ -29,5 +29,6 @@ public class _08_DoOnceExample {
         for (Thread thread : threads) {
             thread.join();
         }
+        //In thread: Thread-7
     }
 }
