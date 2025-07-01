@@ -61,6 +61,26 @@ class ForParametrizedTestsKtTest {
         assertTrue(isPalindrome(input))
     }
 
+    @Test
+    fun `test for map and adding data`() {
+        val map = mutableMapOf<Int, Int>()
+        for (i in 0..5) {
+            map[i] = i
+        }
+        assertEquals(6, map.size)
+        map.forEach { println(it)}
+
+        val mapStr = mutableMapOf<String, Any>()
+        mapStr["1"] = 1
+        mapStr["2"] = "2"
+        mapStr["3"] = true
+        mapStr["4"] = SimpleUser("John", "Doe")
+
+        mapStr.forEach { println(it)}
+        println(mapStr["3"])
+        println(mapStr["5"])
+    }
+
     companion object {
         @JvmStatic
         fun providePalindromes(): Stream<Arguments> {
@@ -76,3 +96,5 @@ class ForParametrizedTestsKtTest {
 
 
 }
+
+data class SimpleUser(val firstName: String, val secondName: String)
