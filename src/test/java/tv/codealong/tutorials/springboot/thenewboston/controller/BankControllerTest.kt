@@ -14,6 +14,11 @@ import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.web.servlet.*
 import tv.codealong.tutorials.springboot.thenewboston.model.Bank
 
+/**
+ * Инжект мок MVC для тестирования контроллера BankController
+ * и мок ObjectMapper для сериализации и десериализации JSON через конструктор,
+ * а не через `@Autowired lateinit var mockMvc: MockMvc`
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 internal class BankControllerTest @Autowired constructor(

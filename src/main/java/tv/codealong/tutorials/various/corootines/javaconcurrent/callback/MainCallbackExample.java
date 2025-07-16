@@ -28,7 +28,7 @@ public class MainCallbackExample {
     public static void main(String[] args) {
         DatabaseService databaseService = new DatabaseService();
 
-        //1. Передаем анонимный класс в метод
+        //1. Передаем анонимный класс в метод (это ка пример с анонимным классом)
         // Передаем м (объект CallBack) в метод, тут видим, как передается анонимный класс
 //        databaseService.fetchData(new CallBack() {
 //            @Override
@@ -37,7 +37,7 @@ public class MainCallbackExample {
 //            }
 //        });
 
-        //2. Передаем лямбду в метод
+        //2. Передаем лямбду в метод (то что было с анонимным классом преобразовано в лямбду)
         // Передаем callBack (объект CallBack) в метод в виде лямбды:
         databaseService.fetchData(resultData -> {
             System.out.println("Данные получены: " + resultData);
