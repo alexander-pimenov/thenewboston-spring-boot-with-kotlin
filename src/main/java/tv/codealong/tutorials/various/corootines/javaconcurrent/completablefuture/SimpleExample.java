@@ -3,6 +3,8 @@ package tv.codealong.tutorials.various.corootines.javaconcurrent.completablefutu
 import java.util.concurrent.CompletableFuture;
 
 /**
+ * 🔹 CompletableFuture (или Kotlin Coroutines) — "Дай обещание, что выполнишь задачу!"
+ * Более современный подход, который работает с "обещаниями" (promises).
  * CompletableFuture — это мощный инструмент в Java для асинхронного программирования,
  * который позволяет удобно работать с фоновыми задачами без блокировки основного потока.
  * Он похож на колбэки, но гораздо удобнее и гибче.
@@ -18,6 +20,8 @@ import java.util.concurrent.CompletableFuture;
  * Ты заказываешь еду через приложение:
  * Ты не стоишь у двери и не ждёшь курьера (не блокируешь поток).
  * Когда еду привезли, тебе приходит уведомление (вызывается твой обработчик).
+ * 🔸 Как работает?
+ * Метод возвращает не результат сразу, а объект-обещание (CompletableFuture), который будет заполнен позже.
  * <p>
  * |-----------------------------------|
  * | CompletableFuture vs Колбэки |
@@ -28,18 +32,30 @@ import java.util.concurrent.CompletableFuture;
  * | Нет встроенной обработки ошибок |	Есть exceptionally, handle |
  * |------------------------------------|
  * <p>
+ * 🔥 Главные отличия
+ * Критерий	Callback vs	CompletableFuture
+ * Стиль:	"Вызови меня потом"	--- "Верни обещание результата"
+ * Читаемость:	Плохая при цепочках вызовов ---	Хорошая (цепочки thenX)
+ * Обработка ошибок:	Сложная (нужно прокидывать вручную) ---	Встроенная (exceptionally)
+ * Композиция:	Трудно комбинировать --- Легко (thenCompose, thenCombine)
+ * Популярность:	Устаревший, но простой --- Современный стандарт
+ * <p>
  *  Где используется?
  * - Запросы к API / БД (не блокируя основной поток).
  * - Параллельные вычисления (например, обработать два запроса одновременно и объединить результат).
  * - Реактивное программирование (часто используется вместе с Spring WebFlux, Project Reactor).
  * <p>
- * 🔹 Плюсы CompletableFuture
+ * 🔸 Плюсы CompletableFuture:
+ * ✅ Читаемость — можно строить цепочки вызовов (thenApply, thenAccept, thenCombine)
  * ✅ Чище и удобнее, чем колбэки.
- * ✅ Можно комбинировать множество асинхронных операций.
- * ✅ Есть обработка ошибок.
+ * ✅ Композиция — легко комбинировать несколько асинхронных операций, т.е. можно комбинировать их.
+ * ✅ Обработка ошибок — есть .exceptionally() и .handle()
+ * ✅ Гибкость — можно ждать завершения всех/любого из Future (allOf/anyOf)
  * ✅ Работает с ForkJoinPool (оптимизирован для асинхронных задач).
  * <p>
- * 🔹 Минусы
+ * 🔸 Минусы CompletableFuture:
+ * ❌ Сложнее для понимания, чем callback
+ * ❌ Требует аккуратной работы с потоками (но в Kotlin есть корутины — suspend-функции)
  * ❌ Сложнее для новичков (по сравнению с синхронным кодом).
  * ❌ Если переусердствовать, код может стать запутанным.
  * <p>
@@ -73,16 +89,18 @@ public class SimpleExample {
         //Ждём результат...
         //Получен результат: Результат операции
 
+
         //2) Цепочка задач (chaining)
         //Можно объединять несколько асинхронных операций в цепочку:
         //Что происходит:
         //supplyAsync — запускает задачу в фоне.
         //thenApply — преобразует результат (асинхронно).
         //thenAccept — обрабатывает финальный результат.
-        CompletableFuture.supplyAsync(() -> "Hello")
-                .thenApply(s -> s + " World")       // "Hello World"
-                .thenApply(String::toUpperCase)     // "HELLO WORLD"
-                .thenAccept(System.out::println);   // Выведет "HELLO WORLD"
+        CompletableFuture.supplyAsync(() -> "Hello") //запускает задачу в фоне
+                .thenApply(s -> s + " World")       // "Hello World" - преобразует результат (асинхронно)
+                .thenApply(String::toUpperCase)     // "HELLO WORLD" - преобразует результат (асинхронно)
+                .thenAccept(System.out::println);   // Выведет "HELLO WORLD" - обработает финальный результат (подписываемся на результат)
+
 
         //3) Комбинирование двух Future
         CompletableFuture<String> future1 = CompletableFuture.supplyAsync(() -> "Hello");
@@ -108,3 +126,15 @@ public class SimpleExample {
 
     }
 }
+
+//fun fetchDataAsync(): CompletableFuture<String> {
+//    return CompletableFuture.supplyAsync {
+//        Thread.sleep(1000) // Имитация долгой операции
+//        "Данные получены!"
+//    }
+//}
+//
+//// Использование
+//fetchDataAsync()
+//    .thenAccept { result -> println(result) } // Выведет "Данные получены!" после выполнения
+//    .exceptionally { ex -> println("Ошибка: ${ex.message}"); null }
