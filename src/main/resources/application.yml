@@ -21,6 +21,13 @@ spring:
       enable-idempotence: true
       max-in-flight-requests-per-connection: 1
       ssl-provider: none
+#  настройка ObjectMapper (так же смотри в конфигурационных бинах)
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+      inclusion: non_null
+    modules:
+      - java-time
 
 check:
   beans:
@@ -33,6 +40,7 @@ main:
 audit:
   enabled: true
   client:
+    mode: sync
     rest:
       enabled: true
       url: http://localhost:8080

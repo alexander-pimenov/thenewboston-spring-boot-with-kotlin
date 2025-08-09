@@ -1,0 +1,30 @@
+audit:
+  enabled: true
+  client:
+    mode: sync
+    nodeId: os_id
+    project: CI123456
+    mainBalancingGroup: REST #KAFKA, DUPLICATE
+    rest:
+      enabled: true
+      url: http://localhost:8090
+      circuitBreaker:
+        recoveryTimeout: 1000
+    kafka:
+      enabled: true
+      servers: localhost:8091
+      topics:
+        event: event-topic
+        metamodel: metamodel-topic
+      circuitBreaker:
+        recoveryTimeout: 1000
+  fallback:
+    enabled: true
+    servers: localhost:8092
+    topic: fallback-topic
+    initialDelay: 100
+    delayPeriod: 100
+    groupId: fallback
+    clientId: fallback
+    circuitBreaker:
+      recoveryTimeout: 1000

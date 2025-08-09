@@ -1,0 +1,41 @@
+package tv.codealong.tutorials.various.audit
+
+class HttpSenderConfiguration {
+    companion object {
+        const val BASE_URL_PROPERTY = "base.url"
+    }
+
+    var name: String? = null
+    var baseHeaders: Map<String, String> = emptyMap()
+    var routeResolvers: List<TransportRouteConfig> = emptyList()
+    var properties: Map<String, String> = emptyMap()
+    private val routes: MutableMap<String, HttpRoute> = mutableMapOf()
+
+    fun setRoutes(routes: List<HttpRoute>) {
+        this.routes.clear()
+        routes.forEach { this.routes[it.name] = it }
+    }
+
+    fun getRoute(name: String): HttpRoute? = routes[name]
+
+    fun validate() {
+        require(name?.isNotBlank() == true) { "Sender name must be specified" }
+        require(properties.containsKey(BASE_URL_PROPERTY)) { "Base URL must be specified" }
+    }
+}
+
+data class HttpRoute(
+    val name: String,
+    val path: String,
+    val method: HttpMethod,
+    val headers: Map<String, String> = emptyMap()
+) {
+    init {
+        require(name.isNotBlank()) { "Route name must not be blank" }
+        require(path.isNotBlank()) { "Path must not be blank" }
+    }
+}
+
+enum class HttpMethod {
+    GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS
+}

@@ -1,0 +1,244 @@
+Ошибка возникает из-за того, что Spring не может найти бин типа `RestPropertiesBuilder` для внедрения в `AuditConfigurationValidator`. Давайте разберёмся, как это исправить.
+
+### Причины проблемы:
+1. В вашем тесте отсутствует конфигурация, которая создаёт бин `RestPropertiesBuilder`
+2. Класс `RestPropertiesBuilder` не помечен как Spring-компонент (`@Component`, `@Service` и т.д.)
+3. Или если `RestPropertiesBuilder` создаётся через другую конфигурацию, эта конфигурация не импортирована в тестовый контекст
+
+### Решения:
+
+**Вариант 1. Добавьте моки для зависимостей в тесте:**
+```kotlin
+@SpringBootTest
+class AuditConfigurationValidatorTest {
+
+    @MockBean
+    lateinit var restPropertiesBuilder: RestPropertiesBuilder
+
+    @MockBean
+    lateinit var kafkaPropertiesBuilder: KafkaPropertiesBuilder
+
+    @Autowired
+    lateinit var validator: AuditConfigurationValidator
+
+    // тесты
+}
+```
+
+**Вариант 2. Если `RestPropertiesBuilder` должен быть реальным бином:**
+1. Убедитесь, что класс `RestPropertiesBuilder` помечен аннотацией Spring (например, `@Component`)
+2. Или что он создаётся в одной из конфигураций, которые импортируются через `@Import`
+
+**Вариант 3. Для интеграционного теста:**
+Убедитесь, что все необходимые конфигурации импортируются. В вашем случае `RestPropertiesBuilder` вероятно создаётся в одном из импортируемых классов (например, `RestBalancingGroupConfiguration`), но тестовый контекст может не загружать всю конфигурацию.
+
+### Дополнительные рекомендации:
+1. Проверьте, что в тестовом классе используется `@SpringBootTest` или `@ContextConfiguration` с указанием всех необходимых классов конфигурации
+2. Убедитесь, что в тестовом application.yaml (или properties) указаны все необходимые свойства
+3. Если вы тестируете только валидацию, возможно, лучше использовать `@WebMvcTest` или `@DataJpaTest` с узким набором компонентов
+
+Пример минимального теста:
+```kotlin
+@SpringBootTest(classes = [AuditAutoConfiguration::class])
+class AuditConfigurationValidatorTest {
+
+    @Autowired
+    lateinit var validator: AuditConfigurationValidator
+
+    @Test
+    fun `should validate duplicate config successfully`() {
+        // given
+        val event = mock<ApplicationReadyEvent>()
+
+        // when
+        validator.onApplicationEvent(event)
+
+        // then - no exception thrown
+    }
+}
+```
+
+Если проблема сохраняется, проверьте цепочку создания `RestPropertiesBuilder` и убедитесь, что соответствующий бин действительно доступен в Spring Context во время выполнения теста.
+
+
+Да, именно так! Вам нужно добавить `RestPropertiesBuilder` и `KafkaPropertiesBuilder` в аннотацию `@EnableConfigurationProperties`, чтобы Spring мог создать эти бины и внедрить их в `AuditConfigurationValidator`.
+
+### Исправленная конфигурация:
+```kotlin
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+@AutoConfiguration
+@Import(
+    PvmSdkServicesConfiguration::class,
+    MetamodelConfiguration::class,
+    EventMessageValidatorConfiguration::class,
+    RestBalancingGroupConfiguration::class,
+    KafkaBalancingGroupConfiguration::class,
+    FallbackBalancingGroupConfiguration::class,
+    AuditSenderConfiguration::class,
+    CommonConfigurations::class,
+    AuditConfigurationValidator::class
+)
+@EnableConfigurationProperties(
+    AuditProperties::class,
+    RestPropertiesBuilder::class,
+    KafkaPropertiesBuilder::class
+)
+class AuditAutoConfiguration
+```
+
+### Почему это работает:
+1. `@ConfigurationProperties`-классы не являются Spring-бинами по умолчанию
+2. Аннотация `@EnableConfigurationProperties` регистрирует указанные классы как бины в Spring Context
+3. После этого они могут быть внедрены через DI в другие компоненты (как в ваш `AuditConfigurationValidator`)
+
+### Дополнительные рекомендации:
+1. Убедитесь, что `KafkaPropertiesBuilder` также аннотирован как `@ConfigurationProperties`:
+```kotlin
+@ConfigurationProperties(prefix = "audit.client.kafka")
+data class KafkaPropertiesBuilder(...)
+```
+
+2. Для лучшей читаемости можно вынести список properties-классов в отдельный метод:
+```kotlin
+@EnableConfigurationProperties(value = [
+    AuditProperties::class,
+    RestPropertiesBuilder::class,
+    KafkaPropertiesBuilder::class
+])
+```
+
+3. Проверьте, что в вашем `application.yaml` все необходимые свойства для этих классов действительно присутствуют (как в примере, который вы предоставили)
+
+После этих изменений ошибка `UnsatisfiedDependencyException` должна исчезнуть, так как Spring сможет найти все необходимые бины для внедрения.
+
+
+Если ваш код является библиотекой (не имеет главного класса `main`) и используется в других приложениях, тесты нужно писать, учитывая, что Spring Context будет запускаться только в тестовом режиме. Вот как правильно организовать тестирование:
+
+### 1. **Базовый интеграционный тест**
+Используйте `@SpringBootTest`, указав явно ваши конфигурационные классы:
+
+```kotlin
+@SpringBootTest(
+    classes = [AuditAutoConfiguration::class],
+    properties = [
+        "audit.enabled=true",
+        "audit.client.mainBalancingGroup=DUPLICATE",
+        "audit.client.rest.url=http://localhost:8090",
+        "audit.client.rest.circuitBreaker.recoveryTimeout=1000",
+        "audit.client.kafka.servers=localhost:9092",
+        "audit.client.kafka.topics.event=event-topic",
+        "audit.client.kafka.circuitBreaker.recoveryTimeout=1000"
+    ]
+)
+class AuditConfigurationValidatorIntegrationTest {
+
+    @Autowired
+    private lateinit var validator: AuditConfigurationValidator
+
+    @Test
+    fun `should not throw when config is valid for DUPLICATE mode`() {
+        assertDoesNotThrow { validator.validateAuditConfig() }
+    }
+}
+```
+
+### 2. **Тест с моками зависимостей (более изолированный)**
+Если не хотите поднимать полный контекст:
+
+```kotlin
+@ExtendWith(MockitoExtension::class)
+class AuditConfigurationValidatorUnitTest {
+
+    @Mock
+    private lateinit var auditProperties: AuditProperties
+
+    @Mock
+    private lateinit var restPropertiesBuilder: RestPropertiesBuilder
+
+    @Mock
+    private lateinit var kafkaPropertiesBuilder: KafkaPropertiesBuilder
+
+    private lateinit var validator: AuditConfigurationValidator
+
+    @BeforeEach
+    fun setup() {
+        validator = AuditConfigurationValidator(
+            auditProperties,
+            restPropertiesBuilder,
+            kafkaPropertiesBuilder
+        )
+    }
+
+    @Test
+    fun `should validate DUPLICATE mode successfully`() {
+        // Given
+        whenever(auditProperties.client.mainBalancingGroup).thenReturn(BalancingGroup.DUPLICATE)
+        whenever(restPropertiesBuilder.enabled).thenReturn(true)
+        whenever(kafkaPropertiesBuilder.enabled).thenReturn(true)
+
+        // When & Then
+        assertDoesNotThrow { validator.validateAuditConfig() }
+    }
+}
+```
+
+### 3. **Тестирование `@ConfigurationProperties`**
+Для проверки биндинга свойств:
+
+```kotlin
+@EnableConfigurationProperties(RestPropertiesBuilder::class)
+@TestPropertySource(properties = [
+    "audit.client.rest.url=http://test",
+    "audit.client.rest.circuitBreaker.recoveryTimeout=500"
+])
+class RestPropertiesBuilderTest {
+
+    @Autowired
+    private lateinit var properties: RestPropertiesBuilder
+
+    @Test
+    fun `should bind properties correctly`() {
+        assertEquals("http://test", properties.url)
+        assertEquals(500, properties.circuitBreaker?.recoveryTimeout)
+    }
+}
+```
+
+### 4. **Проверка валидации через `@TestConfiguration`**
+Для частичного поднятия контекста:
+
+```kotlin
+@TestConfiguration
+@EnableConfigurationProperties(AuditProperties::class)
+class TestConfig {
+    @Bean
+    fun restPropsBuilder() = RestPropertiesBuilder(
+        enabled = true,
+        url = "http://valid",
+        circuitBreaker = CircuitBreakerConfiguration(1000)
+    )
+}
+
+@SpringBootTest(classes = [TestConfig::class, AuditConfigurationValidator::class])
+class PartialContextTest {
+    // ...
+}
+```
+
+### Ключевые моменты:
+1. Для библиотек **не нужен `@SpringBootApplication`**, но тесты могут использовать `@SpringBootTest` с явным указанием классов.
+2. Все `@ConfigurationProperties`-классы должны быть явно включены через `@EnableConfigurationProperties`.
+3. Для изолированного тестирования компонентов лучше использовать моки (`@MockBean` или Mockito).
+4. Убедитесь, что в `src/test/resources` есть минимальный `application.yml` или используйте `@TestPropertySource`.
+
+Пример структуры тестов:
+```
+src/test/kotlin/
+├── integration/
+│   ├── AuditConfigurationValidatorIT.kt
+├── unit/
+│   ├── AuditConfigurationValidatorTest.kt
+│   ├── RestPropertiesBuilderTest.kt
+└── resources/
+    └── application-test.yml
+```
