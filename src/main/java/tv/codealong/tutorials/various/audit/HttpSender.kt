@@ -9,6 +9,15 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.web.client.RestTemplate
 
+/**
+ * Реализует AuditSender для отправки через HTTP
+ *
+ * Использует RestTemplate для выполнения запросов
+ *
+ * Поддерживает маршрутизацию на разные endpoints
+ *
+ * Интегрирован с мониторингом
+ */
 class HttpSender(
     private val configuration: HttpSenderConfiguration,
     private val monitoringService: PvmSdkMonitoringService,

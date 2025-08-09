@@ -1,5 +1,12 @@
 package tv.codealong.tutorials.various.audit
 
+/**
+ * Содержит базовую конфигурацию HTTP-клиента
+ *
+ * Управляет маршрутизацией через routeResolvers
+ *
+ * Хранит базовые заголовки и свойства
+ */
 class HttpSenderConfiguration {
     companion object {
         const val BASE_URL_PROPERTY = "base.url"
@@ -24,6 +31,13 @@ class HttpSenderConfiguration {
     }
 }
 
+/**
+ * Определяет конечные точки API
+ *
+ * Содержит имя маршрута, путь и метод
+ *
+ * Может включать специфичные для маршрута заголовки
+ */
 data class HttpRoute(
     val name: String,
     val path: String,
@@ -38,4 +52,11 @@ data class HttpRoute(
 
 enum class HttpMethod {
     GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS
+}
+
+//можно и такой класс сделать:
+class Request {
+    enum class HttpMethod {
+        GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS
+    }
 }
