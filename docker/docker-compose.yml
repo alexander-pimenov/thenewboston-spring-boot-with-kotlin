@@ -1,0 +1,80 @@
+version: "3.9"
+services:
+  zookeeper:
+    image: docker.io/confluentinc/cp-zookeeper:6.2.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ALLOW_ANONYMOUS_LOGIN: "yes"
+      ZOOKEEPER_ADMIN_SERVER_PORT: 8191
+    healthcheck:
+      test: [ "CMD", "curl", "-fsSL", "http://zookeeper:8191/commands/ruok" ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    ports:
+      - "22181:2181"
+    networks:
+      - kafka-net
+
+  broker:
+    image: docker.io/confluentinc/cp-kafka:7.0.0
+    container_name: broker
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENERS: INSIDE://0.0.0.0:9092,OUTSIDE://0.0.0.0:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://localhost:9092,OUTSIDE://broker:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+    healthcheck:
+      test: [ "CMD-SHELL", "echo 'test-message' | kafka-console-producer --broker-list kafka:9092 --topic health-check-topic && kafka-console-consumer --bootstrap-server kafka:9092 --topic health-check-topic --from-beginning --max-messages 1 | grep 'test-message'" ]
+      interval: 10s
+      timeout: 30s
+      retries: 10
+    networks:
+      - kafka-net
+
+
+  #  ---------- Kafka-UI ----------
+  kafka-ui:
+    #    image: docker.io/provectuslabs/kafka-ui:latest
+    image: docker.io/provectuslabs/kafka-ui:c00cb320cde844bcefbde8fc2105d65b6e725b93
+    #    docker pull provectuslabs/kafka-ui:1108c760e5f0b23908f3818500b78fe57d44ce71
+    container_name: kafka-ui
+    restart: on-failure
+    mem_limit: 400m
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      #      KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS: localhost:9092
+      #      KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS: kafka:9092,localhost:9093
+      KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+      KAFKA_CLUSTER_0_JMXPORT: 9997
+      DYNAMIC_CONFIG_ENABLED: "true"
+    #    так можно запускать, например, на другом порту и с кастомными параметрами, т.к. кафка это Java приложение.
+    #    env_file:
+    #      - ./kafka-ui/JAVA_OPTS
+    ports:
+      - "8078:8080"
+    networks:
+      - kafka-net
+
+
+networks:
+  kafka-net:
+    name: kafka-net
+    driver: bridge

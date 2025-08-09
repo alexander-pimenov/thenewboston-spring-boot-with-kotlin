@@ -1,0 +1,1 @@
+JAVA_OPTS=-Dnode.id=kafka-ui-api -Dserver.port=8078 -Dfile.encoding=UTF-8

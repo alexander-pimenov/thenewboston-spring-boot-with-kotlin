@@ -7,11 +7,37 @@ another:
   timeout: ${ANOTHER_TIMEOUT:60000}
 
 spring:
+  application:
+    name:
+      the-new-boston-demo
   kafka:
     producer:
       bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+      client-id: "demo-newboston-producer"
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
       acks: all
       retries: Integer.MAX_VALUE
       enable-idempotence: true
       max-in-flight-requests-per-connection: 1
       ssl-provider: none
+
+check:
+  beans:
+    enabled: true
+
+main:
+  balancing:
+    group: DUPLICATE
+
+audit:
+  enabled: true
+  client:
+    rest:
+      enabled: true
+      url: http://localhost:8080
+      timeout: 60000
+    kafka:
+      enabled: true
+      topic: audit-topic
+      servers: localhost:9092
