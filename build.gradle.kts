@@ -64,6 +64,12 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310") //LocalDatetime
     implementation("com.fasterxml.jackson.core:jackson-annotations")
 
+    //feign
+    implementation("io.github.openfeign:feign-core:13.5")
+
+    // Для распознавания текста из картинок
+    implementation("net.sourceforge.tess4j:tess4j:5.8.0")
+
 
 
     implementation("org.springframework.boot:spring-boot-starter-web")

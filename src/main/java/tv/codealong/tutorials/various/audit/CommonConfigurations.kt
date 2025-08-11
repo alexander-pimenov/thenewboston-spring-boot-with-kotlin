@@ -9,6 +9,7 @@ import org.springframework.boot.context.properties.bind.ConstructorBinding
 import org.springframework.context.annotation.Bean
 import org.springframework.core.Ordered
 import org.springframework.stereotype.Component
+import tv.codealong.tutorials.various.audit.java.CircuitBreakerConfiguration
 
 @Component
 @ConditionalOnProperty("audit.enabled", havingValue = "true", matchIfMissing = true)
@@ -124,14 +125,12 @@ data class AuditClientProperties(
 //)
 
 
-
-
 @ConfigurationProperties(prefix = "audit.client.rest")
 data class RestPropertiesBuilder(
     override val enabled: Boolean?,
     val url: String?,
     val main: Boolean = true,
-    val circuitBreaker: CircuitBreakerConfiguration?
+    val circuitBreaker: tv.codealong.tutorials.various.audit.java.CircuitBreakerConfiguration?
 ) : EnablerProperties {
     fun build(): RestProperties? {
         requireNotNull(url) { "audit.client.rest.url обязателен для заполнения" }
@@ -145,7 +144,7 @@ data class RestPropertiesBuilder(
     }
 }
 
-data class RestProperties(val url: String, val main: Boolean, val circuitBreaker: CircuitBreakerConfiguration)
+data class RestProperties(val url: String, val main: Boolean, val circuitBreaker: tv.codealong.tutorials.various.audit.java.CircuitBreakerConfiguration)
 
 @ConfigurationProperties(prefix = "audit.client.kafka")
 data class KafkaPropertiesBuilder(
@@ -153,7 +152,7 @@ data class KafkaPropertiesBuilder(
     val servers: String?,
     val topics: TopicsPairBuilder?,
     val main: Boolean = false,
-    val circuitBreaker: CircuitBreakerConfiguration?
+    val circuitBreaker: tv.codealong.tutorials.various.audit.java.CircuitBreakerConfiguration?
 ) : EnablerProperties {
     fun build(): KafkaProperties? {
         requireNotNull(servers) { "сервер kafka audit.client.kafka.servers должен быть обязательно указан" }
@@ -172,7 +171,7 @@ data class KafkaProperties(
     val servers: String,
     val topicsPair: TopicsPair,
     val main: Boolean,
-    var circuitBreaker: CircuitBreakerConfiguration
+    var circuitBreaker: tv.codealong.tutorials.various.audit.java.CircuitBreakerConfiguration
 )
 
 @ConfigurationProperties(prefix = "audit.fallback")
@@ -186,6 +185,7 @@ data class FallbackPropertiesBuilder(
     val clientId: String?,
     val circuitBreaker: CircuitBreakerConfiguration?
 ) : EnablerProperties {
+
     fun build(): FallbackProperties? {
         requireNotNull(servers) { "audit.fallback.servers обязателен для заполнения" }
         requireNotNull(topic) { "audit.fallback.topic обязателен для заполнения" }
@@ -211,8 +211,81 @@ data class FallbackProperties(
     val delayPeriod: Long,
     val groupId: String,
     val clientId: String,
-    val circuitBreaker: CircuitBreakerConfiguration
+    val circuitBreaker: tv.codealong.tutorials.various.audit.java.CircuitBreakerConfiguration
 )
+
+//2-й вариант без nullable полей
+@ConfigurationProperties(prefix = "audit.fallback")
+data class FallbackSenderProperties(
+    override val enabled: Boolean?,
+    val servers: String,
+    val topic: String,
+    val initialDelay: Long = 100,
+    val delayPeriod: Long = 150,
+    val groupId: String,
+    val clientId: String,
+    val circuitBreaker: tv.codealong.tutorials.various.audit.java.CircuitBreakerConfiguration
+) : EnablerProperties {
+
+    @ConstructorBinding
+    constructor(
+        enabled: Boolean?,
+        servers: String?,
+        topic: String?,
+        initialDelay: Long?,
+        delayPeriod: Long?,
+        groupId: String?,
+        clientId: String?,
+        circuitBreaker: tv.codealong.tutorials.various.audit.java.CircuitBreakerConfiguration?
+    ) : this(
+        enabled = enabled != false,
+        servers = when {
+            enabled == false -> ""
+            else -> {
+                requireNotNull(servers) { "audit.fallback.servers обязателен для заполнения" }.let {
+                    require(it.isNotEmpty()) { "audit.fallback.servers не может быть пустой строкой" }
+                    it
+                }
+            }
+        },
+        topic = when {
+            enabled == false -> ""
+            else -> {
+                requireNotNull(topic) { "audit.fallback.topic обязателен для заполнения" }.let {
+                    require(it.isNotEmpty()) { "audit.fallback.topic не может быть пустой строкой" }
+                    it
+                }
+            }
+        },
+        initialDelay = initialDelay ?: 100,
+        delayPeriod = delayPeriod ?: 150,
+        groupId = when {
+            enabled == false -> ""
+            else -> {
+                requireNotNull(groupId) { "audit.fallback.groupId обязателен для заполнения" }.let {
+                    require(it.isNotEmpty()) { "audit.fallback.groupId не может быть пустой строкой" }
+                    it
+                }
+            }
+        },
+        clientId = when {
+            enabled == false -> ""
+            else -> {
+                requireNotNull(clientId) { "audit.fallback.clientId обязателен для заполнения" }.let {
+                    require(it.isNotEmpty()) { "audit.fallback.clientId не может быть пустой строкой" }
+                    it
+                }
+            }
+        },
+        circuitBreaker = when {
+            enabled == false -> tv.codealong.tutorials.various.audit.java.CircuitBreakerConfiguration()
+            else -> {
+                requireNotNull(circuitBreaker) { "audit.fallback.circuitBreaker обязателен для заполнения" }
+                circuitBreaker
+            }
+        }
+    )
+}
 
 data class TopicsPair(val event: String, val metamodel: String)
 

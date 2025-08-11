@@ -1,5 +1,6 @@
 package tv.codealong.tutorials.various.audit
 
+import feign.Request
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.client.RestTemplateBuilder
@@ -8,6 +9,7 @@ import org.springframework.context.annotation.ConditionContext
 import org.springframework.context.annotation.Conditional
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.type.AnnotatedTypeMetadata
+import tv.codealong.tutorials.various.audit.java.HttpRoute
 import java.util.regex.Pattern
 
 @Configuration
@@ -78,12 +80,12 @@ class RestBalancingGroupConfiguration(
                 HttpRoute(
                     "metamodel_pipeline",
                     String.format("push/project/%s/split-by-ott/v2/metamodel", project),
-                    HttpMethod.POST
+                    Request.HttpMethod.POST
                 ),
                 HttpRoute(
                     "event_pipeline",
                     String.format("push/project/%s/split-by-ott/v2/event", project),
-                    HttpMethod.POST
+                    Request.HttpMethod.POST
                 )
             )
         )

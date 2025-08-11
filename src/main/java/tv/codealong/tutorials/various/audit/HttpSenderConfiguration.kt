@@ -1,5 +1,7 @@
 package tv.codealong.tutorials.various.audit
 
+import tv.codealong.tutorials.various.audit.java.HttpRoute
+
 /**
  * Содержит базовую конфигурацию HTTP-клиента
  *
@@ -38,25 +40,25 @@ class HttpSenderConfiguration {
  *
  * Может включать специфичные для маршрута заголовки
  */
-data class HttpRoute(
-    val name: String,
-    val path: String,
-    val method: HttpMethod,
-    val headers: Map<String, String> = emptyMap()
-) {
-    init {
-        require(name.isNotBlank()) { "Route name must not be blank" }
-        require(path.isNotBlank()) { "Path must not be blank" }
-    }
-}
-
-enum class HttpMethod {
-    GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS
-}
+//data class HttpRoute(
+//    val name: String,
+//    val path: String,
+//    val method: HttpMethod,
+//    val headers: Map<String, String> = emptyMap()
+//) {
+//    init {
+//        require(name.isNotBlank()) { "Route name must not be blank" }
+//        require(path.isNotBlank()) { "Path must not be blank" }
+//    }
+//}
+//
+//enum class HttpMethod {
+//    GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS
+//}
 
 //можно и такой класс сделать:
-class Request {
-    enum class HttpMethod {
-        GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS
-    }
-}
+//class Request {
+//    enum class HttpMethod {
+//        GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS
+//    }
+//}

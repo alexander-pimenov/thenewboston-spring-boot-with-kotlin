@@ -1,6 +1,7 @@
 package tv.codealong.tutorials.various.audit
 
 import org.slf4j.LoggerFactory
+import tv.codealong.tutorials.various.audit.java.BalancingGroupConfiguration
 
 class BalancingGroupChecker {
     private val log = LoggerFactory.getLogger(BalancingGroupChecker::class.java)

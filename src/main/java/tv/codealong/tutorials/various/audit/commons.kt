@@ -3,6 +3,8 @@ package tv.codealong.tutorials.various.audit
 import org.springframework.boot.context.properties.bind.Binder
 import org.springframework.context.annotation.Condition
 import org.springframework.context.annotation.ConditionContext
+import tv.codealong.tutorials.various.audit.java.BalancingGroupConfiguration
+import tv.codealong.tutorials.various.audit.java.CircuitBreakerConfiguration
 
 const val DEFAULT_PRIORITY = 10
 const val DISABLED_VALUE = "disabled"
@@ -12,8 +14,14 @@ enum class BalancingGroup { NONE, REST, KAFKA, DUPLICATE; }
 
 interface EnablerProperties {
     val enabled: Boolean?
+
+    val isEnabled: Boolean
+        get() = enabled != false
 }
 
+/**
+ * Проверяет, что свойство `propertyName` в контексте `context` имеет класс `propertyClass`
+ */
 abstract class CommonCondition<T : EnablerProperties> : Condition {
     fun matches(
         propertyName: String,
@@ -43,6 +51,25 @@ fun createBalancingGroupConfiguration(
     balancingGroupConfig.providerNameToWeight[providerClass.simpleName] = 1
 
     return balancingGroupConfig
+}
+
+inline fun <reified T> requireIfEnabled(
+    enabled: Boolean?,
+    value: T?,
+    errorMessage: () -> String,
+    defaultValue: () -> T
+): T {
+    return if (enabled == false) defaultValue() else {
+        requireNotNull(value) { errorMessage() }.also {
+            if (it is String) require(it.isNotBlank()) { errorMessage() }
+        }
+    }
+}
+
+inline fun <reified T> checkNotNull(value: T?, propertyName: String) {
+    requireNotNull(value) {
+        "$propertyName must be specified (обязателен для заполнения)"
+    }
 }
 
 // Прочие интерфейсы, которые используются в коде

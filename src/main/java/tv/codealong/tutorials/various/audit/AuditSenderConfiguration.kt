@@ -5,6 +5,7 @@ import io.micrometer.core.ipc.http.HttpSender
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import tv.codealong.tutorials.various.audit.java.BalancingGroupConfiguration
 
 @Configuration
 @ConditionalOnProperty("audit.enabled", havingValue = "true", matchIfMissing = true)
