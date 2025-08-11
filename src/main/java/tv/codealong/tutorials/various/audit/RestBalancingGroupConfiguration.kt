@@ -42,7 +42,7 @@ class RestBalancingGroupConfiguration(
 
     @Bean
     fun httpSender(
-        httpSenderConfiguration: HttpSenderConfiguration,
+        httpSenderConfiguration: tv.codealong.tutorials.various.audit.java.HttpSenderConfiguration,
         pvmSdkMonitoringService: PvmSdkMonitoringService
     ) =
         HttpSender(

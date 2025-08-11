@@ -70,6 +70,8 @@ dependencies {
     // Для распознавания текста из картинок
     implementation("net.sourceforge.tess4j:tess4j:5.8.0")
 
+    //не знаю для чего
+    implementation("com.google.findbugs:jsr305:3.0.2")
 
 
     implementation("org.springframework.boot:spring-boot-starter-web")
