@@ -18,7 +18,25 @@ public enum PvmSdkMetric implements PvmPrometheusMetric {
     PVM_SDK_TOTAL_OUT("pvm.sdk.total.out", "Общее количество отправленных сообщений", "PLT_TOTAL_OUT", List.of(), MetricType.COUNTER),
     PVM_SDK_TOTAL_OUT_TIME("pvm.sdk.total.out.time", "Общее время отправки сообщений", "PLT_TOTAL_OUT_TIME", List.of(), MetricType.COUNTER),
     PVM_SDK_TOTAL_SIZE("pvm.sdk.total.size", "Общий размер сообщений", "PLT_TOTAL_SIZE", List.of(), MetricType.COUNTER),
-    PVM_SDK_TOTAL_SIZE();
+    PVM_SDK_LOW_CRITICALLY_EVENT_LOST(),
+    PVM_SDK_LOW_CRITICALLY_EVENT_SEND_70(),
+    PVM_SDK_LOW_CRITICALLY_EVENT_SEND_100(),
+    PVM_SDK_LOW_CRITICALLY_EVENT_SEND_130(),
+    PVM_SDK_SEND_QUOTA_TPS(),
+    PVM_SDK_SEND_QUOTA_VPS(),
+    PVM_SDK_QUOTA_WARN_EXCEED(),
+    PVM_SDK_QUOTA_ERROR_EXCEED(),
+    PVM_SDK_GROUP_OUT_FAIL(),
+    PVM_SDK_GROUP_HC_FAIL(),
+    PVM_SDK_MESSAGE_SIZE_EXCEED(),
+    PVM_SDK_OUT_FAIL(),
+    PVM_SDK_OUT(),
+    PVM_SDK_OUT_TIME(),
+    PVM_SDK_HC_FAIL(),
+    PVM_SDK_PULL_OUT(),
+    PVM_SDK_PULL_OUT_FAIL(),
+    PVM_SDK_PULL_SIGNTURE_FAIL(),
+    PVM_SDK_PULL_DESERIALIZATION_FAIL();
 
 
 
