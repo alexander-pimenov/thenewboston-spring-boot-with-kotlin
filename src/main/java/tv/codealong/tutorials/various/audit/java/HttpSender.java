@@ -7,6 +7,12 @@ import tv.codealong.tutorials.various.audit.PvmSdkMonitoringService;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Map;
 
+/**
+ * @ParametersAreNonnullByDefault — это аннотация Java, используемая для указания того, что по умолчанию все
+ * параметры в заданной области действия (пакете, классе или методе) считаются ненулевыми.
+ * Эта аннотация является частью спецификации JSR 305, целью которой является предоставление стандартных
+ * аннотаций для обнаружения дефектов программного обеспечения.
+ */
 @ParametersAreNonnullByDefault
 public class HttpSender implements PvmSdkSender {
     private static final Logger log = LoggerFactory.getLogger(HttpSender.class);
@@ -15,8 +21,8 @@ public class HttpSender implements PvmSdkSender {
     private final PvmSdkMonitoringService monitoring;
     private final PvmCustomHttpclient pvmCustomlttpClient;
     private final  HealthCheckProvider healthCheckProvider;
-    public HttpSender(HttpSenderConfiguration configuration  PvmSdkllonitoringService
-            configuration. validate();
+
+    public HttpSender(HttpSenderConfiguration configuration,  PvmSdkllonitoringService  configuration. validate();
     monitoring  @Nullable SSLSocketFactory sslSocketFactory) {
         if (configuration getBaseUrl() . startsllith("https")
                 &&
@@ -53,15 +59,11 @@ else
         HealthState DOIIN
         this monitoring.metric(PvmSdkMetric.PVM_SDK_HG_FAIL,  this getTagValues());
         return healthState;
-        public void send(QNotMull PvmTransportMessage message)
-        {
-            startNanoTime
-            System.nanoTime() ;
-            this doSend(
-                this resolvellttpRoute(message) ,
-                message) ;
+        public void send(QNotMull PvmTransportMessage message) {
+            startNanoTime            System.nanoTime() ;
+            this.doSend(this.resolvellttpRoute(message) , message) ;
             long   totalMillisTime
-            TimeUnit NANOSECONDS . toMilZis( duration: System nanoTime()
+            TimeUnit NANOSECONDS.toMilZis( duration: System nanoTime()
             startlanoTime);
             debug("{} message {}
                     was sent successful

@@ -124,7 +124,24 @@ data class AuditClientProperties(
 //    val mainBalancingGroup: BalancingGroup = BalancingGroup.NONE
 //)
 
-
+/**
+ * В Kotlin обычно валидацию делают именно в init, потому что это основной механизм для выполнения
+ * логики сразу после инициализации всех свойств первичного конструктора.
+ * Вторичные конструкторы нужны для создания дополнительных способов инициализации, а не для валидации.
+ *
+ * <p>
+ * простое наличие @ConfigurationProperties не создаёт бин само по себе.
+ *
+ * Spring Boot с версии 2.2 и выше требует, чтобы класс с @ConfigurationProperties был либо:
+ *
+ * Помечен как компонент (@Component),
+ *
+ * Или зарегистрирован через @EnableConfigurationProperties(RestProperties::class),
+ *
+ * Или был возвращён как бин из конфигурации (@Bean).
+ *
+ * Иначе Spring просто не будет знать, что нужно создать бин для твоего класса.
+ */
 @ConfigurationProperties(prefix = "audit.client.rest")
 data class RestPropertiesBuilder(
     override val enabled: Boolean?,
@@ -299,3 +316,43 @@ data class TopicsPairBuilder(val event: String?, val metamodel: String?) {
         )
     }
 }
+
+
+//implementation("org.springframework.boot:spring-boot-starter-validation")
+//Что происходит:
+// Можно использовать стандартные аннотации jakarta.validation (раньше javax.validation), а Spring Boot
+// автоматически вызовет валидацию при биндинге свойств.
+//
+//@Validated включает валидацию для этого класса при создании бина.
+//
+//Аннотации (@NotBlank, @Pattern, @Valid) проверяются автоматически.
+//
+//Если данные некорректные — Spring выбрасывает BindValidationException при старте приложения.
+//
+//@Component гарантирует, что Spring создаст бин RestProperties.
+
+//import jakarta.validation.constraints.NotBlank
+//import jakarta.validation.constraints.Pattern
+//import org.springframework.boot.context.properties.ConfigurationProperties
+//import org.springframework.boot.context.properties.EnableConfigurationProperties
+//import org.springframework.stereotype.Component
+//import org.springframework.validation.annotation.Validated
+//
+//@Validated
+//@ConfigurationProperties(prefix = "audit.client.rest")
+//@Component
+//data class RestProperties(
+//    @field:NotBlank(message = "audit.client.rest.url обязателен для заполнения")
+//    @field:Pattern(
+//        regexp = "https?://.*",
+//        message = "audit.client.rest.url должен начинаться с http или https"
+//    )
+//    val url: String,
+//
+//    @field:jakarta.validation.Valid
+//    val circuitBreaker: CircuitBreakerConfiguration,
+//
+//    val priority: Int = 10,
+//
+//    val enabled: Boolean? = null
+//) : EnablerProperties

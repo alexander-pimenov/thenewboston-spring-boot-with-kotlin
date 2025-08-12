@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Condition
 import org.springframework.context.annotation.ConditionContext
 import tv.codealong.tutorials.various.audit.java.BalancingGroupConfiguration
 import tv.codealong.tutorials.various.audit.java.CircuitBreakerConfiguration
+import java.net.ServerSocket
 
 const val DEFAULT_PRIORITY = 10
 const val DISABLED_VALUE = "disabled"
@@ -80,3 +81,18 @@ inline fun <reified T> checkNotNull(value: T?, propertyName: String) {
 //interface HttpSender
 //interface KafkaSender
 //interface KafkaBuffer
+
+fun findRandomPort(): Int {
+    ServerSocket(0).use { socket ->
+        return socket.localPort
+    }
+}
+
+fun sleep(millis: Long = 1) {
+    try {
+        Thread.sleep(millis)
+    } catch (e: InterruptedException) {
+        e.printStackTrace()
+        Thread.currentThread().interrupt()
+    }
+}

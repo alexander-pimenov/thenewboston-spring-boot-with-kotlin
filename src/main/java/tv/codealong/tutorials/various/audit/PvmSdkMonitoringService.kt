@@ -1,6 +1,9 @@
 package tv.codealong.tutorials.various.audit
 
-class PvmSdkMonitoringService {
+public interface PvmSdkMonitoringService {
+
+    void messageLost();
+
     fun trackError(s: String) {
         TODO("Not yet implemented")
     }
