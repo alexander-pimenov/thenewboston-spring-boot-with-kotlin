@@ -11,6 +11,8 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.core.type.AnnotatedTypeMetadata
 import tv.codealong.tutorials.various.audit.java.HttpRoute
 import java.util.regex.Pattern
+import tv.codealong.tutorials.various.audit.java.PvmSdkMonitoringService
+import tv.codealong.tutorials.various.audit.java.HttpSender
 
 @Configuration
 @Conditional(RestBalancingGroupConfiguration.RestCondition::class)
@@ -48,8 +50,7 @@ class RestBalancingGroupConfiguration(
         HttpSender(
             httpSenderConfiguration,
             pvmSdkMonitoringService,
-            RestTemplateBuilder().build()
-//            null
+            null
         )
 
     @Bean

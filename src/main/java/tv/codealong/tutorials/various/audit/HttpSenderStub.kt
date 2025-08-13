@@ -2,12 +2,15 @@ package tv.codealong.tutorials.various.audit
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import feign.Request
 import org.slf4j.LoggerFactory
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.web.client.RestTemplate
+import tv.codealong.tutorials.various.audit.java.HttpRoute
+import tv.codealong.tutorials.various.audit.java.PvmSdkMonitoringService
 
 /**
  * Реализует AuditSender для отправки через HTTP
@@ -18,19 +21,19 @@ import org.springframework.web.client.RestTemplate
  *
  * Интегрирован с мониторингом
  */
-class HttpSender(
+class HttpSenderStub(
     private val configuration: HttpSenderConfiguration,
     private val monitoringService: PvmSdkMonitoringService,
     private val restTemplate: RestTemplate = RestTemplateBuilder().build()
 ) : AuditSender {
 
-    private val log = LoggerFactory.getLogger(HttpSender::class.java)
+    private val log = LoggerFactory.getLogger(HttpSenderStub::class.java)
     private val objectMapper = ObjectMapper().registerModule(JavaTimeModule())
 
     override fun send(event: IProcessedInvocation) {
         try {
             val route = resolveRoute(event) ?: run {
-                monitoringService.trackError("No route found for event")
+                monitoringService.messageLost()
                 throw IllegalStateException("No route found for event")
             }
 
@@ -49,10 +52,10 @@ class HttpSender(
                 throw RuntimeException("HTTP request failed with status: ${response.statusCode}")
             }
 
-            monitoringService.trackSuccess()
+            monitoringService.messageLost()
         } catch (ex: Exception) {
             log.error("Failed to send audit event via HTTP", ex)
-            monitoringService.trackError(ex.message ?: "Unknown error")
+            monitoringService.messageLost()
             throw ex
         }
     }
@@ -82,15 +85,18 @@ class HttpSender(
         return objectMapper.writeValueAsString(event)
     }
 
-    private fun convertHttpMethod(method: HttpMethod): org.springframework.http.HttpMethod {
+    private fun convertHttpMethod(method: Request.HttpMethod): org.springframework.http.HttpMethod {
         return when (method) {
-            HttpMethod.GET -> org.springframework.http.HttpMethod.GET
-            HttpMethod.POST -> org.springframework.http.HttpMethod.POST
-            HttpMethod.PUT -> org.springframework.http.HttpMethod.PUT
-            HttpMethod.DELETE -> org.springframework.http.HttpMethod.DELETE
-            HttpMethod.PATCH -> org.springframework.http.HttpMethod.PATCH
-            HttpMethod.HEAD -> org.springframework.http.HttpMethod.HEAD
-            HttpMethod.OPTIONS -> org.springframework.http.HttpMethod.OPTIONS
+            Request.HttpMethod.GET -> org.springframework.http.HttpMethod.GET
+            Request.HttpMethod.POST -> org.springframework.http.HttpMethod.POST
+            Request.HttpMethod.PUT -> org.springframework.http.HttpMethod.PUT
+            Request.HttpMethod.DELETE -> org.springframework.http.HttpMethod.DELETE
+            Request.HttpMethod.PATCH -> org.springframework.http.HttpMethod.PATCH
+            Request.HttpMethod.HEAD -> org.springframework.http.HttpMethod.HEAD
+            Request.HttpMethod.OPTIONS -> org.springframework.http.HttpMethod.OPTIONS
+            else -> {
+                error("Unsupported HTTP method: $method")
+            }
         }
     }
 }

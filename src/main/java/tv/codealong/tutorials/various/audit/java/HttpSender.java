@@ -1,11 +1,14 @@
 package tv.codealong.tutorials.various.audit.java;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import tv.codealong.tutorials.various.audit.PvmSdkMonitoringService;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import javax.net.ssl.SSLSocketFactory;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @ParametersAreNonnullByDefault — это аннотация Java, используемая для указания того, что по умолчанию все
@@ -19,68 +22,62 @@ public class HttpSender implements PvmSdkSender {
     private final SenderConfiguration configuration;
     private final Map<String, HttpRoute> httpRoutes;
     private final PvmSdkMonitoringService monitoring;
-    private final PvmCustomHttpclient pvmCustomlttpClient;
-    private final  HealthCheckProvider healthCheckProvider;
+    private final PvmCustomHttpClient pvmCustomHttpClient;
+    private final HealthCheckProvider healthCheckProvider;
 
-    public HttpSender(HttpSenderConfiguration configuration,  PvmSdkllonitoringService  configuration. validate();
-    monitoring  @Nullable SSLSocketFactory sslSocketFactory) {
-        if (configuration getBaseUrl() . startsllith("https")
-                &&
-                ssuSocketFactory
-        null) {
-            throw
-                    new
-                            IllegaZArgumentException("Invalid sslSocketFactory:
-else
-            sstSocketFactory mUst be provided for https protocol url");
-            this.configuration
-            z
-                    configuration;
-            this httpRoutes
-                    s
-            configuration.getRoutes(};
-        this monitoring
-                monitoring;
-        this pvmCustomHttpclient
-                >
-                this.
-        this.healthCheckProvider
-                =
-                nel
-        buildPvmGustomHttpGlient(configuration; sslSocketFactorv);
-        HttpSenderHlealthCheckProvider(configuration.getBaseUrtO), sslSocketFactorv);
-        public @Notiull String name
-        return this.configuration. getiame() ;
-        public @NotNull Healthstate healthCheckt)
-        Healthstate healthState
-        this.healthCheckProvider .health();
-        if (healthState
-        ~г
-        HealthState DOIIN
-        this monitoring.metric(PvmSdkMetric.PVM_SDK_HG_FAIL,  this getTagValues());
+    public HttpSender(
+            HttpSenderConfiguration configuration,
+            PvmSdkMonitoringService monitoring,
+            @Nullable SSLSocketFactory sslSocketFactory) {
+        configuration.validate();
+        if (configuration.getBaseUrl().startsWith("https")
+                && sslSocketFactory == null) {
+            throw new IllegalArgumentException("Invalid sslSocketFactory must be provided for https protocol url ");
+        } else {
+            this.configuration = configuration;
+            this.httpRoutes = configuration.getRoutes();
+            this.monitoring = monitoring;
+            this.pvmCustomHttpClient = this.buildPvmCustomHttpClient(configuration, sslSocketFactory);
+            this.healthCheckProvider = new HttpSenderHealthCheckProvider(configuration.getBaseUrl(), sslSocketFactory);
+        }
+    }
+
+    private PvmCustomHttpClient buildPvmCustomHttpClient(HttpSenderConfiguration configuration, @Nullable SSLSocketFactory sslSocketFactory) {
+        return null;
+    }
+
+    private double getTagValues() {
+
+        return 0;
+    }
+
+    public @NotNull String name() {
+        return this.configuration.getName();
+    }
+
+    public @NotNull HealthState healthCheck() {
+        HealthState healthState = this.healthCheckProvider.health();
+        if (healthState == HealthState.DOWN) {
+            this.monitoring.metric(PvmSdkMetric.PVM_SDK_HC_FAIL, this.getTagValues());
+        }
         return healthState;
-        public void send(QNotMull PvmTransportMessage message) {
-            startNanoTime            System.nanoTime() ;
-            this.doSend(this.resolvellttpRoute(message) , message) ;
-            long   totalMillisTime
-            TimeUnit NANOSECONDS.toMilZis( duration: System nanoTime()
-            startlanoTime);
-            debug("{} message {}
-                    was sent successful
-                    in {} mls
-            new Object[] {message.info() ,  message.id() .
-                    this monitoring metric(PvmSdkMetric  PVM_SDK_OUT,
-                    this. getTagValues()) ;
-            totalMillisTime});
-            this monitoring.metric(PvmSdkMetric  PVM_SDK_OUT_TIME;
-            (double)   totalMillisTime
-            this.
-                    getTagVatues() ) ;
-            private void doSend(HttpRoute httpRoute, PvmTransportMessage
-            rev
-            message)
-            {
-                1og
-                long
-                log .
+    }
+
+
+
+    public void send(@NotNull PvmTransportMessage message) {
+        long startNanoTime = System.nanoTime();
+        this.doSend(this.resolveHttpRoute(message), message);
+        long totalMillisTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanoTime);
+        log.debug("{} message {} was sent successful in {} ms", new Object[]{message.info(), message.id(), totalMillisTime});
+        this.monitoring.metric(PvmSdkMetric.PVM_SDK_OUT, this.getTagValues());
+        this.monitoring.metric(PvmSdkMetric.PVM_SDK_OUT_TIME, (double) totalMillisTime, this.getTagVatues());
+    }
+
+    private void doSend(HttpRoute httpRoute, PvmTransportMessage message) {
+        try {
+        } catch (Exception e) {
+        }
+
+    }
 }

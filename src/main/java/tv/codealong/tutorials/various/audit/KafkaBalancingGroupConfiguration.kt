@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Conditional
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.type.AnnotatedTypeMetadata
 import java.util.regex.Pattern
+import tv.codealong.tutorials.various.audit.java.PvmSdkMonitoringService
 
 @Configuration
 @Conditional(KafkaBalancingGroupConfiguration.KafkaCondition::class)

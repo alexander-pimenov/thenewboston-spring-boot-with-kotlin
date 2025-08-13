@@ -1,6 +1,7 @@
 package tv.codealong.tutorials.various.audit
 
 import tv.codealong.tutorials.various.audit.java.BalancingGroupConfiguration
+import tv.codealong.tutorials.various.audit.java.PvmSdkMonitoringService
 
 // PvmSdkConfiguration - интерфейс конфигурации SDK
 interface PvmSdkConfiguration {
