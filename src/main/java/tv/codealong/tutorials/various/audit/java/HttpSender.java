@@ -7,7 +7,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.net.ssl.SSLSocketFactory;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -46,9 +48,22 @@ public class HttpSender implements PvmSdkSender {
         return null;
     }
 
-    private double getTagValues() {
+    private @NotNull String[] getTagValues() {
+        return new String[]{this.resolveBalancingGroupName(), this.configuration.getName()};
+    }
 
-        return 0;
+    private @NotNull String resolveBalancingGroupName() {
+        return (String) Optional.ofNullable(MonitoringContextHolder.getContext()).map((context) -> {
+            return context.getTagValues(this.configuration.getName());
+        }).map((tags) -> {
+            return (String) tags.get("group");
+        }).orElse("UNKNOWN_GROUP");
+    }
+
+    private @NotNull Map<String, Object> getHeaders(Map<String, String> map) {
+        Map<String, Object> headers = new HashMap<>(this.configuration.getBaseHeaders());
+        headers.putAll(map);
+        return headers;
     }
 
     public @NotNull String name() {
@@ -62,7 +77,6 @@ public class HttpSender implements PvmSdkSender {
         }
         return healthState;
     }
-
 
 
     public void send(@NotNull PvmTransportMessage message) {

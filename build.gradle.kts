@@ -70,8 +70,9 @@ dependencies {
     // Для распознавания текста из картинок
     implementation("net.sourceforge.tess4j:tess4j:5.8.0")
 
-    //не знаю для чего
-    implementation("com.google.findbugs:jsr305:3.0.2")
+    //не знаю для чего, но в нем есть @NotNull, хотя такое есть у org.jetbrains.annotations.Nullable;
+    //но в некоторых проектах была именно findbugs
+    implementation("com.google.code.findbugs:jsr305:3.0.2")
 
 
     implementation("org.springframework.boot:spring-boot-starter-web")
