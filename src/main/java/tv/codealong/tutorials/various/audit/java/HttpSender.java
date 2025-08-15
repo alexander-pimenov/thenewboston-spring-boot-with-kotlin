@@ -1,5 +1,6 @@
 package tv.codealong.tutorials.various.audit.java;
 
+import feign.Request;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -8,12 +9,13 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.net.ssl.SSLSocketFactory;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @ParametersAreNonnullByDefault — это аннотация Java, используемая для указания того, что по умолчанию все
+ * @ParametersAreNonnullByDefault— это аннотация Java, используемая для указания того, что по умолчанию все
  * параметры в заданной области действия (пакете, классе или методе) считаются ненулевыми.
  * Эта аннотация является частью спецификации JSR 305, целью которой является предоставление стандартных
  * аннотаций для обнаружения дефектов программного обеспечения.
@@ -85,11 +87,41 @@ public class HttpSender implements PvmSdkSender {
         long totalMillisTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanoTime);
         log.debug("{} message {} was sent successful in {} ms", new Object[]{message.info(), message.id(), totalMillisTime});
         this.monitoring.metric(PvmSdkMetric.PVM_SDK_OUT, this.getTagValues());
-        this.monitoring.metric(PvmSdkMetric.PVM_SDK_OUT_TIME, (double) totalMillisTime, this.getTagVatues());
+        this.monitoring.metric(PvmSdkMetric.PVM_SDK_OUT_TIME, (double) totalMillisTime, this.getTagValues());
+    }
+
+    private @NotNull HttpRoute resolveHttpRoute(PvmTransportMessage message) {
+        Iterator<TransportRouteConfig> var2 = this.configuration.getRouteResolvers().iterator();
+
+        TransportRouteConfig routeResolver;
+        String value;
+        do {
+            if (!var2.hasNext()) {
+                String errorMessage = String.format("Route not found for message %s, routes %s",
+                        message, this.configuration.getRouteResolvers());
+                log.error(errorMessage);
+                throw new IllegalStateException(errorMessage);
+            }
+
+            routeResolver = (TransportRouteConfig) var2.next();
+            if (routeResolver.isDefault() && this.httpRoutes.containsKey(routeResolver.getRoute())) {
+                return (HttpRoute) this.httpRoutes.get(routeResolver.getRoute());
+            }
+            value = message.routeFieldValue(routeResolver.getRoute());
+        } while (value == null || !routeResolver.getPattern().matcher(value).find());
+        return (HttpRoute) this.httpRoutes.get(routeResolver.getRoute());
     }
 
     private void doSend(HttpRoute httpRoute, PvmTransportMessage message) {
         try {
+            log.debug("http route path {} name {} method {}", new Object[]{
+                    httpRoute.getPath(),
+                    httpRoute.getName(),
+                    httpRoute.getMethod()
+            });
+            if (httpRoute.getMethod() == Request.HttpMethod.POST) {
+               this.pvmCustomHttpClient.postByRoute(httpRoute.getPath(), this.getHeaders(message.headers()),message.payload());
+            }
         } catch (Exception e) {
         }
 
