@@ -8,5 +8,10 @@ class BeanCheck(private val beanChecker: BeanChecker) {
     @PostConstruct
     fun beanCheck() {
         beanChecker.checkBean()
+
+        // Вызываем первый раз
+        MySingleton.hello() // Тут произойдет инициализация
+        MySingletonComponent.hello() // Тут произойдет инициализация
+
     }
 }
