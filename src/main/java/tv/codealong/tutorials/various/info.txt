@@ -1,0 +1,18 @@
+Лекции по Java от Тагира Валеева.
+Плейлист:
+https://youtube.com/playlist?list=PLlb7e2G7aSpTCB2OxGlezpgOXwq4xer7Z&si=H_HLwGOFDFgvW1dh
+
+
+Многопоточность глазами разработчика
+Eugene Suleimanov
+https://youtu.be/m-7EljqdxpA
+
+
+Лекция 11. Многопоточность в Java
+Tagir Valeev
+https://youtu.be/ShzQJUFzq58
+
+Лекция 12. Примитивы синхронизации и конкурентные коллекции
+Tagir Valeev
+https://youtu.be/5YLA29EybMo
+
