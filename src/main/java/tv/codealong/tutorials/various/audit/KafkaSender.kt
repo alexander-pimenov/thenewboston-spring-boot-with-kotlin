@@ -55,7 +55,7 @@ class KafkaSender(
     override fun send(event: IProcessedInvocation) {
         try {
             val route = resolveRoute(event) ?: run {
-                monitoringService.trackError("No route found for event")
+              //  monitoringService.trackError("No route found for event")
                 throw IllegalStateException("No route found for event")
             }
 
@@ -71,10 +71,10 @@ class KafkaSender(
             val future = producer.send(record)
             future.get() // Для синхронной отправки
 
-            monitoringService.trackSuccess()
+            //monitoringService.trackSuccess()
         } catch (ex: Exception) {
             log.error("Failed to send audit event to Kafka", ex)
-            monitoringService.trackError(ex.message ?: "Unknown error")
+            //monitoringService.trackError(ex.message ?: "Unknown error")
             throw ex
         }
     }

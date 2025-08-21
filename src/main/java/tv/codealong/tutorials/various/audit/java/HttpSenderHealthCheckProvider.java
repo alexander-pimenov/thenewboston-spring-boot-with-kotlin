@@ -11,4 +11,9 @@ public class HttpSenderHealthCheckProvider implements HealthCheckProvider {
              @Nullable SSLSocketFactory sslSocketFactory) {
 
     }
+
+    @Override
+    public HealthState health() {
+        return null;
+    }
 }
