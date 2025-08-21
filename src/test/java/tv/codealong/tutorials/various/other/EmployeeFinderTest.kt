@@ -80,6 +80,21 @@ class EmployeeFinderTest {
     }
 
     @Test
+    fun `findListKotlinDev should return empty list`() {
+        // Arrange
+        val javaDev = Employee("Петр Петров", "JAVA_DEVELOPER")
+        val pythonDev = Employee("Алексей Алексеев", "PYTHON_DEVELOPER")
+        val department = Department("Разработка", listOf(javaDev, pythonDev))
+        val departments = listOf(department)
+
+
+        // Act & Assert
+        val employeeList = employeeFinder.findListKotlinDevSafe(departments)
+
+        assertTrue(employeeList.isEmpty())
+    }
+
+    @Test
     fun `findKotlinDev should handle empty departments list`() {
         // Arrange
         val departments = emptyList<Department>()

@@ -35,12 +35,12 @@ class EmployeeFinder {
 
     fun findListKotlinDevSafe(departments: List<Department>): List<Employee> = departments
         .asSequence() // полезно для больших коллекций, чтобы избежать создания промежуточных списков
-        .flatMap { it.employees.filter { it.name == "KOTLIN_DEVELOPER" } }.toList()
+        .flatMap { it.employees.filter { employee -> employee.name == "KOTLIN_DEVELOPER" } }.toList()
 
 
     fun findListKotlinDevSafe2(departments: List<Department>): List<Employee> = departments
         .asSequence() // полезно для больших коллекций, чтобы избежать создания промежуточных списков
-        .flatMap { it.employees.filter { it.name == "KOTLIN_DEVELOPER" } }.toList()
+        .flatMap { it.employees.filter { employee -> employee.name == "KOTLIN_DEVELOPER" } }.toList()
         .let {
             it.ifEmpty { throw NoSuchElementException("No KOTLIN_DEVELOPER found in ${departments.size} departments") }
         }
