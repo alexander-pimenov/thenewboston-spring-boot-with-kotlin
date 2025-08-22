@@ -3,6 +3,7 @@ package tv.codealong.tutorials.various.other
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import kotlin.system.measureTimeMillis
 
 class EmployeeFinderTest {
 
@@ -168,6 +169,46 @@ class EmployeeFinderTest {
         }
 
         assertEquals("No KOTLIN_DEVELOPER found in 1 departments", errorRes.message)
+    }
+
+    @Test
+    fun `findKotlinDev when using sequence`() {
+        // Arrange
+        val dept1 = Department("Backend", listOf(
+            Employee("Иван", "JAVA_DEVELOPER"),
+            Employee("Петр", "KOTLIN_DEVELOPER"), // ← здесь наш разработчик!
+            Employee("Bob", "CPP_DEVELOPER")
+        ))
+
+        val dept2 = Department("Frontend", listOf(
+            Employee("Мария", "JS_DEVELOPER"),
+            Employee("Анна", "KOTLIN_DEVELOPER"),
+            Employee("Jack", "PYTHON_DEVELOPER")
+        ))
+
+        val departments = listOf(dept1, dept2)
+
+        // Act
+        val result = employeeFinder.findKotlinDevSafe2(departments)
+
+        assertEquals("Петр", result.name)
+    }
+
+    @Test
+    fun `test for measuring sequence processing (benchmarck)`() {
+        val largeList = (1..1_000_000).toList()
+
+        // Медленнее и использует больше памяти
+        val time1 = measureTimeMillis {
+            largeList.map { it * 2 }.filter { it % 3 == 0 }.take(10).toList()
+        }
+
+        // Быстрее и эффективнее
+        val time2 = measureTimeMillis {
+            largeList.asSequence().map { it * 2 }.filter { it % 3 == 0 }.take(10).toList()
+        }
+
+        println("List: $time1 ms, Sequence: $time2 ms") //List: 32 ms, Sequence: 6 ms
     }
 
     companion object {
