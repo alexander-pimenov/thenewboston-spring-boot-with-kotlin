@@ -1,4 +1,4 @@
-package tv.codealong.tutorials.various.fibonaccifuctorial
+package tv.codealong.tutorials.various.fibonaccifactorial
 
 import java.math.BigInteger
 
