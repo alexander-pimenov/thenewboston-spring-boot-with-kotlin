@@ -71,6 +71,12 @@ fun main() {
     println("\nСравнение для n=$nn:")
     println("Итеративный: ${factorialIterative(nn)}")
     println("Функциональный: ${factorialFunctional(nn)}")
+
+    println("\n-----------------")
+    println("Итеративный: ${factorialIterative(1)}")
+    println("Итеративный: ${factorialIterative(2)}")
+    println("Итеративный: ${factorialIterative(3)}")
+    println("Итеративный: ${factorialIterative(4)}")
 }
 
 // Самый рекомендуемый вариант - итеративный
