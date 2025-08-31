@@ -191,7 +191,9 @@ class EmployeeFinderTest {
         // Act
         val result = employeeFinder.findKotlinDevSafe2(departments)
 
-        assertEquals("Петр", result.name)
+        val name = result.name
+        println(name)
+        assertEquals("Петр", name)
     }
 
     @Test
