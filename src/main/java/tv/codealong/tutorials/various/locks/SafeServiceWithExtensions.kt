@@ -1,5 +1,6 @@
 package tv.codealong.tutorials.various.locks
 
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantReadWriteLock
@@ -8,17 +9,14 @@ import kotlin.concurrent.thread
 
 /**
  * Ключевые преимущества подхода с tryLock():
- * Предотвращение "вечного" дедлока: Приложение не зависнет навсегда.
+ * - Предотвращение "вечного" дедлока: Приложение не зависнет навсегда.
+ * - Возможность логирования: Вы можете залогировать факт проблемы.
+ * - Возможность восстановления: Можно предпринять альтернативные действия.
+ * - Мониторинг: Легко отслеживать проблемы с блокировками.
+ * - Более предсказуемое поведение: Таймауты делают систему более стабильной.
  *
- * Возможность логирования: Вы можете залогировать факт проблемы.
- *
- * Возможность восстановления: Можно предпринять альтернативные действия.
- *
- * Мониторинг: Легко отслеживать проблемы с блокировками.
- *
- * Более предсказуемое поведение: Таймауты делают систему более стабильной.
- *
- * Рекомендация: Используйте Вариант 2 с extension-функцией - он сочетает безопасность, читаемость и переиспользуемость кода. Для особо критичных мест可以考虑 Вариант 3 с повторными попытками.
+ * Рекомендация: Используйте Вариант 2 с extension-функцией - он сочетает безопасность, читаемость и переиспользуемость
+ * кода (Lock.tryWithLock). Для особо критичных мест Вариант 3 с повторными попытками.
  *
  * Ключевые особенности реализации:
  * Data класс - содержит основные поля и метод copyWithNewValue для неизменяемости
@@ -45,6 +43,10 @@ class SafeServiceWithExtensions {
     private var storage: Data = Data(1, "initial_value", 1)
     private val log = mutableListOf<String>()
 
+    companion object {
+        private val logger = LoggerFactory.getLogger(this::class.java)
+    }
+
     fun processData(newValue: String): Result<Data> {
         return lock.writeLock().tryWithLock(5, TimeUnit.SECONDS) {
             // Имитация долгой операции
@@ -61,8 +63,36 @@ class SafeServiceWithExtensions {
         }
     }
 
+    fun processData2(newValue: String): Data {
+        return doWithWriteLock(lock) {
+            // Имитация долгой операции
+            Thread.sleep(Random.nextLong(100, 500))
+
+            val newData: Data = storage.copyWithNewValue(newValue)
+            storage = newData
+
+            val message = "Processed: ${newData.value} (v${newData.version})"
+            log.add(message)
+            println("✓ $message")
+
+            newData
+        }
+    }
+
     fun readData(): Result<Data> {
         return lock.readLock().tryWithLock(2, TimeUnit.SECONDS) {
+            // Имитация чтения
+            Thread.sleep(Random.nextLong(50, 200))
+
+            val message = "Read: ${storage.value} (v${storage.version})"
+            println("📖 $message")
+
+            storage
+        }
+    }
+
+    fun readData2(): Data {
+        return doWithReadLock(lock) {
             // Имитация чтения
             Thread.sleep(Random.nextLong(50, 200))
 
@@ -90,10 +120,22 @@ class SafeServiceWithExtensions {
         }.getOrElse { emptyList() }
     }
 
+    fun getOperationLog2(): List<String> {
+        return doWithReadLock(lock) {
+            log.toList()
+        }
+    }
+
     fun getCurrentData(): Data {
         return lock.readLock().tryWithLock(1, TimeUnit.SECONDS) {
             storage
         }.getOrElse { Data(-1, "error", -1) }
+    }
+
+    fun getCurrentData2(): Data {
+        return doWithReadLock(lock) {
+            storage
+        }
     }
 
     fun clearLog() {
@@ -101,6 +143,37 @@ class SafeServiceWithExtensions {
             log.clear()
             println("Log cleared")
         }
+    }
+
+    fun clearLog2() {
+        doWithWriteLock(lock) {
+            log.clear()
+            println("Log cleared")
+        }
+    }
+
+    fun updateWithRetry(data: Data, maxAttempts: Int = 3): Boolean {
+        var attempts = 0
+
+        while (attempts < maxAttempts) {
+            attempts++
+
+            val lockAcquired: Boolean = lock.writeLock().tryLock(30, TimeUnit.SECONDS)
+            if (lockAcquired) {
+                return try {
+                    processData(data.value)
+                    true
+                } finally {
+                    lock.writeLock().unlock()
+                }
+            } else {
+                logger.warn("Failed to acquire lock on attempt $attempts. Retrying...")
+                Thread.sleep(1000) // Ждем перед повторной попыткой
+            }
+        }
+
+        logger.error("All $maxAttempts attempts to acquire lock failed")
+        return false
     }
 }
 
