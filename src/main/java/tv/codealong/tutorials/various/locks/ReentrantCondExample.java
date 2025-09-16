@@ -19,7 +19,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class ReentrantCondExample {
     Store store = null;
     SimpleDateFormat sdf = null;
-    final String[] GOODS = {"Молоко", "Кефир", "Ряженка", "Кофе", "Чай"};
+    final String[] GOODS = {"Milk", "Kefir", "Ryazhenka", "Coffee", "Tea"};
     List<String> goods = new ArrayList<String>();
 
     ReentrantCondExample() {
@@ -28,8 +28,14 @@ public class ReentrantCondExample {
 
         Thread producer = new Thread(new Producer());
         Thread consumer = new Thread(new Consumer());
+        System.out.println("Start producer...");
         producer.start();
+        System.out.println("Start consumer...");
         consumer.start();
+        boolean producerAlive = producer.isAlive();
+        System.out.println("producerAlive = " + producerAlive);
+        boolean consumerAlive = consumer.isAlive();
+        System.out.println("consumerAlive = " + consumerAlive);
 
         while (producer.isAlive() || consumer.isAlive()) {
             try {
@@ -38,7 +44,7 @@ public class ReentrantCondExample {
                 e.printStackTrace();
             }
         }
-        System.out.println("\nЗавершение работы примера");
+        System.out.println("\nCompleting the example");
         System.exit(0);
 
     }
@@ -49,16 +55,20 @@ public class ReentrantCondExample {
             String text = sdf.format(new Date()) + msg;
             System.out.println(text);
         } else
-            System.out.println("\tТоваров на складе:"
+            System.out.println("\tGoods in stock: "
                     + goods.size());
     }
 
     class Consumer implements Runnable {
         public void run() {
-            for (int i = 0; i > GOODS.length; i++) {
+            System.out.println("Consumer is running...");
+            if (goods.isEmpty()) {
+                System.out.println("#Consumer. Goods in stock: " + goods.size());
+            }
+            for (int i = 0; i < GOODS.length; i++) {
                 try {
                     Thread.sleep(8000);
-                } catch (InterruptedException e) {
+                } catch (InterruptedException ignored) {
                 }
                 store.get();
             }
@@ -66,12 +76,14 @@ public class ReentrantCondExample {
     }
 
     class Producer implements Runnable {
+
         public void run() {
-            for (int i = 0; i < GOODS.length; i++) {
-                store.put(GOODS[i]);
+            System.out.println("Producer is running...");
+            for (String good : GOODS) {
+                store.put(good);
                 try {
                     Thread.sleep(2000);
-                } catch (InterruptedException e) {
+                } catch (InterruptedException ignored) {
                 }
             }
         }
@@ -87,24 +99,27 @@ public class ReentrantCondExample {
         }
 
         public void get() {
+            System.out.println("#get - " + Thread.currentThread().getName());
             lock.lock();
             try {
                 // ожидание на пустом складе
-                while (goods.size() < 1)
+                while (goods.isEmpty())
+                    System.out.println("#wait - " + Thread.currentThread().getName());
                     cond.await();
 
-                printMessage("Реализация : " + goods.get(0));
-                goods.remove(0);
+                printMessage("Realization :" + goods.getFirst());
+                goods.removeFirst();
                 printMessage(null);
                 // Сигнализация
                 cond.signalAll();
-            } catch (InterruptedException e) {
+            } catch (InterruptedException ignored) {
             } finally {
                 lock.unlock();
             }
         }
 
         public void put(final String good) {
+            System.out.println("#put - " + Thread.currentThread().getName());
             lock.lock();
             try {
                 // ожидание освобождения места
@@ -112,7 +127,7 @@ public class ReentrantCondExample {
                     cond.await();
                 goods.add(good);
 
-                printMessage("Доставка : " + good);
+                printMessage("Delivery :" + good);
                 printMessage(null);
                 // Сигнализация
                 cond.signalAll();
