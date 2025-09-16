@@ -97,7 +97,11 @@ dependencies {
     testImplementation("io.mockk:mockk:${mockkVersion}")
     testImplementation("com.ninja-squad:springmockk:${springmockkVersion}")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+//    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    // https://mvnrepository.com/artifact/org.junit.platform/junit-platform-launcher
+    testImplementation("org.junit.platform:junit-platform-launcher")
+    // https://mvnrepository.com/artifact/org.junit.platform/junit-platform-engine
+    testImplementation("org.junit.platform:junit-platform-engine")
 //    testImplementation("org.springframework.security:spring-security-test")
 
 
