@@ -1,5 +1,6 @@
 package tv.codealong.tutorials.various.other
 
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.extension.ExtendWith
@@ -12,10 +13,22 @@ import kotlin.test.fail
 
 // Использование в тестах
 
-@ExtendWith(ForkJoinPoolMonitoringExtension::class)
 @Execution(ExecutionMode.CONCURRENT)
-class ConcurrentTest {
+class Concurrent2Test {
 
+    companion object {
+        @JvmStatic
+        @BeforeAll
+        fun setup() {
+            ForkJoinPoolMonitor.startMonitoring()
+        }
+
+        @JvmStatic
+        @AfterAll
+        fun cleanup() {
+            ForkJoinPoolMonitor.stopMonitoring()
+        }
+    }
 
     @Test
     fun test1() {

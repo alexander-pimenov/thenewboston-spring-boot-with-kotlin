@@ -797,3 +797,126 @@ ForkJoinPool monitoring stopped // ✅ Корректная остановка!
 Теперь мониторинг будет **безопасно запускаться и останавливаться** без бесконечных циклов! 🚀
 
 ---
+
+Отличное замечание! Вы абсолютно правы - я оставил голый комментарий, но не объяснил **почему это уже корректное поведение**. Давайте разберем детально.
+
+## 🎯 **Почему это уже корректно:**
+
+```kotlin
+} catch (e: InterruptedException) {
+    // Корректное завершение по прерыванию
+    println("Monitoring interrupted gracefully")
+}
+```
+
+**Это корректно, потому что:**
+
+1. **Мы выходим из цикла** - исключение прерывает `Thread.sleep()`, поток продолжает выполнение
+2. **Дальше идет `finally` блок** - который гарантированно выполнится
+3. **Поток завершается естественно** - после окончания метода `run()`
+
+## 🔄 **Что происходит под капотом:**
+
+```kotlin
+thread {
+    try {
+        while (isRunning.get()) {    // 1. Проверка условия
+            monitorForkJoinPool()    // 2. Выполняем работу
+            Thread.sleep(intervalMs) // 3. Спим → 🚨 INTERRUPTED!
+        }
+    } catch (e: InterruptedException) {
+        // 4. Ловим исключение, выводим сообщение
+        println("Monitoring interrupted gracefully")
+    } finally {
+        // 5. Гарантированно выполняем cleanup
+        println("ForkJoinPool monitoring stopped")
+    }
+    // 6. Поток завершается ← ✅ КОРРЕКТНО!
+}
+```
+
+## ⚠️ **Когда нужно ВОССТАНАВЛИВАТЬ interrupted status:**
+
+Восстановление статуса нужно, **если вы не можете сразу завершить работу** и должны передать сигнал прерывания дальше:
+
+```kotlin
+} catch (e: InterruptedException) {
+    // СЛУЧАЙ 1: Не можем сразу завершиться → передаем дальше
+    Thread.currentThread().interrupt() // ← ВОССТАНАВЛИВАЕМ статус
+    doSomeCleanupThatMightAlsoCheckInterruption()
+    
+    // СЛУЧАЙ 2: Работаем с блокирующими операциями
+    Thread.currentThread().interrupt()
+    throw RuntimeException("Operation cancelled", e)
+}
+```
+
+## ✅ **В вашем случае это НЕ нужно, потому что:**
+
+1. **Вы сразу завершаете поток** после прерывания
+2. **Нет дальнейших блокирующих операций**
+3. **Поток просто заканчивает работу**
+
+## 🚀 **Полная версия с объяснением:**
+
+```kotlin
+object ForkJoinPoolMonitor {
+    // ...
+    
+    @JvmStatic
+    fun startMonitoring(intervalMs: Long = 3000) {
+        if (isRunning.get()) return
+        
+        isRunning.set(true)
+        monitoringThread = thread(name = "FJP-Monitor", isDaemon = true) {
+            try {
+                while (isRunning.get()) {
+                    monitorForkJoinPool()
+                    
+                    // Sleep может быть прерван вызовом thread.interrupt()
+                    Thread.sleep(intervalMs)
+                }
+            } catch (e: InterruptedException) {
+                // ✅ КОРРЕКТНО: Мы ловим прерывание и просто завершаемся
+                // НЕ восстанавливаем статус, потому что поток завершается
+                println("Monitoring interrupted gracefully")
+            } finally {
+                // Гарантированный cleanup
+                println("ForkJoinPool monitoring stopped")
+                isRunning.set(false)
+            }
+        }
+    }
+    
+    @JvmStatic
+    fun stopMonitoring() {
+        isRunning.set(false)
+        monitoringThread?.interrupt() // Посылаем сигнал прерывания
+        monitoringThread = null
+    }
+}
+```
+
+## 📊 **Когда что использовать:**
+
+| Ситуация | Обработка |
+|----------|-----------|
+| **Немедленное завершение** | `catch { println(); }` ← ВАШ СЛУЧАЙ |
+| **Постепенное завершение** | `catch { interrupt(); cleanup(); }` |
+| **Передача прерывания** | `catch { interrupt(); throw ... }` |
+
+## 🎯 **Итог:**
+
+Ваш текущий код **уже корректен** для сценария немедленного завершения. Восстановление статуса нужно только если поток должен продолжить работу и проверять прерывание в другом месте.
+
+**Так правильно:** ✅
+```kotlin
+} catch (e: InterruptedException) {
+    println("Monitoring interrupted gracefully")
+    // Просто завершаемся - статус не нужен
+}
+```
+
+Теперь исключение будет обрабатываться "красиво" без stack trace в логах! 🚀
+
+---
