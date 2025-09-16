@@ -24,15 +24,16 @@ object SafeForkJoinPoolMonitor {
                 } catch (e: InterruptedException) {
                     println("Monitoring interrupted")
                     break
+                } finally {
+                    println("ForkJoinPool monitoring completed")
                 }
             }
-            println("ForkJoinPool monitoring completed")
         }
     }
 
     @JvmStatic
     fun stopMonitoring() {
-        monitoringThread?.interrupt()
+        monitoringThread?.interrupt() // Посылаем сигнал прерывания
         monitoringThread = null
     }
 }
