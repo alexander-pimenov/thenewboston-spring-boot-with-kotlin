@@ -61,7 +61,7 @@ public class ReentrantCondExample {
 
     class Consumer implements Runnable {
         public void run() {
-            System.out.println("Consumer is running...");
+            System.out.println("Consumer is running... with " + Thread.currentThread().getName());
             if (goods.isEmpty()) {
                 System.out.println("#Consumer. Goods in stock: " + goods.size());
             }
@@ -78,7 +78,7 @@ public class ReentrantCondExample {
     class Producer implements Runnable {
 
         public void run() {
-            System.out.println("Producer is running...");
+            System.out.println("Producer is running... with " + Thread.currentThread().getName());
             for (String good : GOODS) {
                 store.put(good);
                 try {
@@ -103,9 +103,10 @@ public class ReentrantCondExample {
             lock.lock();
             try {
                 // ожидание на пустом складе
-                while (goods.isEmpty())
+                while (goods.isEmpty()) {
                     System.out.println("#wait - " + Thread.currentThread().getName());
                     cond.await();
+                }
 
                 printMessage("Realization :" + goods.getFirst());
                 goods.removeFirst();
