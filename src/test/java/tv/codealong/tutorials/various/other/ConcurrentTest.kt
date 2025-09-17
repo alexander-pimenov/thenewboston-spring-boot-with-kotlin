@@ -10,8 +10,13 @@ import java.lang.management.ManagementFactory
 import java.util.concurrent.TimeUnit
 import kotlin.test.fail
 
-// Использование в тестах
-
+/**
+ * Использование в тестах
+ * Настройка мониторинга в блоке @ExtendWith, в котором используется класс
+ * ForkJoinPoolMonitoringExtension с переопределенными методами интерфейсов
+ * BeforeAllCallback, AfterAllCallback
+ *
+ */
 @ExtendWith(ForkJoinPoolMonitoringExtension::class)
 @Execution(ExecutionMode.CONCURRENT)
 class ConcurrentTest {

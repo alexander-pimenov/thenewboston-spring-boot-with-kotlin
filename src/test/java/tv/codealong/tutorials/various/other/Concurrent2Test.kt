@@ -11,8 +11,11 @@ import java.lang.management.ManagementFactory
 import java.util.concurrent.TimeUnit
 import kotlin.test.fail
 
-// Использование в тестах
-
+/**
+ * Использование в тестах
+ * Настройка мониторинга в блоках @BeforeAll и @AfterAll
+ *
+ */
 @Execution(ExecutionMode.CONCURRENT)
 class Concurrent2Test {
 

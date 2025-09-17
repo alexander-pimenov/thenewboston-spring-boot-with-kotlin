@@ -79,6 +79,9 @@ class ForkJoinPoolMonitor {
 
             monitoringThread = thread(name = "FJP-Monitor", isDaemon = true) {
                 try {
+                    // ✅ Ждем немного перед первым замером
+                    Thread.sleep(1000)
+
                     while (isRunning.get()) {       // ✅ Проверяем флаг // 1. Проверка условия
                         monitorForkJoinPool()       // 2. Выполняем работу
 
@@ -123,11 +126,19 @@ class ForkJoinPoolMonitor {
                 val forkJoinPool = ForkJoinPool.commonPool()
 
                 println("=== ForkJoinPool Monitor ===")
+                println("CommonPool: ${System.identityHashCode(forkJoinPool)}")
                 println("Parallelism: ${forkJoinPool.parallelism}")
                 println("Pool size: ${forkJoinPool.poolSize}")
                 println("Active threads: ${forkJoinPool.activeThreadCount}")
+                println("Queued submissions: ${forkJoinPool.queuedSubmissionCount}")
                 println("Queued tasks: ${forkJoinPool.queuedTaskCount}")
                 println("Steal count: ${forkJoinPool.stealCount}")
+                println("Running threads: ${forkJoinPool.runningThreadCount}")
+                println("Async mode: ${forkJoinPool.asyncMode}")
+                // Дополнительная диагностика
+                println("Available processors: ${Runtime.getRuntime().availableProcessors()}")
+
+                checkForDeadlocks()
 
                 // Анализ состояния потоков
                 threadBean.allThreadIds.asSequence()
@@ -144,17 +155,34 @@ class ForkJoinPoolMonitor {
                 println("============================")
             }
         }
+
+        private fun checkForDeadlocks() {
+            val threadBean = ManagementFactory.getThreadMXBean()
+            val deadlockedThreads = threadBean.findDeadlockedThreads()
+
+            if (deadlockedThreads != null) {
+                println("⚠️  DEADLOCK DETECTED!")
+                threadBean.getThreadInfo(deadlockedThreads).forEach { info ->
+                    println("Deadlocked thread: ${info?.threadName}")
+                }
+            }
+        }
     }
 }
 
+//Что происходит по шагам:
+//Мониторинг запускается ДО тестов → пул еще пустой
+//Тесты стартуют → пул создает воркеры
+//Мониторинг завершается → не успевает увидеть активность
+//
 //Extension#ForkJoinPool monitoring started
 //=== ForkJoinPool Monitor ===
 //Parallelism: 11
-//Pool size: 0
-//Active threads: 0
-//Queued tasks: 0
-//Steal count: 0
-//Test 1 started on thread: ForkJoinPool-1-worker-2
+//Pool size: 0          //← Мониторинг ДО создания потоков
+//Active threads: 0     //← Еще нет активных задач
+//Queued tasks: 0       //← Очередь пуста
+//Steal count: 0        //← Не было краж задач
+//Test 1 started on thread: ForkJoinPool-1-worker-2    //← А вот потоки уже созданы!
 //Test 3 started on thread: ForkJoinPool-1-worker-4
 //Test 2 started on thread: ForkJoinPool-1-worker-3
 //Test 5 started on thread: ForkJoinPool-1-worker-1

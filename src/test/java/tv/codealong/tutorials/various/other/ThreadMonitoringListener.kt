@@ -35,7 +35,7 @@ class ThreadMonitoringListener : TestExecutionListener {
 
     private fun printPoolStatus(context: String) {
         println("\n=== $context ===")
-        println("ForkJoinPool status:")
+        println("###ForkJoinPool status:###")
         println("  Parallelism: ${forkJoinPool.parallelism}")
         println("  Pool size: ${forkJoinPool.poolSize}")
         println("  Active threads: ${forkJoinPool.activeThreadCount}")
