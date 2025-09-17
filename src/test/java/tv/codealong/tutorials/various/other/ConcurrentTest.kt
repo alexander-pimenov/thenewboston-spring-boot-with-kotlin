@@ -17,6 +17,7 @@ import kotlin.test.fail
  * BeforeAllCallback, AfterAllCallback
  *
  */
+@ExtendWith(ClassPreloadingExtensionWithAtomic::class)
 @ExtendWith(ForkJoinPoolMonitoringExtension::class)
 @Execution(ExecutionMode.CONCURRENT)
 class ConcurrentTest {
