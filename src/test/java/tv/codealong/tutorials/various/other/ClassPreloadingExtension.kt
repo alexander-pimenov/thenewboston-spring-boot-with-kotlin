@@ -70,9 +70,12 @@ class ClassPreloadingExtension : BeforeAllCallback {
      * Поток 1: выходит из synchronized
      *
      * Поток 2: входит в synchronized → if (!preloaded) → false → выходит
+     *
+     * synchronized гарантирует, что запись preloaded = true будет видна всем потокам.
      */
     override fun beforeAll(context: ExtensionContext) {
         if (!preloaded) {                                   // ← Чтение 1 ← Быстрая проверка без синхронизации
+            //synchronized гарантирует, что запись preloaded = true будет видна всем потокам.
             synchronized(lock) {                            // ← Синхронизация ← Синхронизация для точной проверки
                 if (!preloaded) {                           // ← Чтение 2 (под синхронизацией)
                     println("⏳ Preloading classes...")

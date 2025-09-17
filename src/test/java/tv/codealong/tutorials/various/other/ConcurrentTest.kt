@@ -17,6 +17,8 @@ import kotlin.test.fail
  * BeforeAllCallback, AfterAllCallback
  *
  */
+@ExtendWith(TestClassPreloadingExtension::class) // этот для примера глобальной загрузки многих классов
+// - Более практичный подход - Часто проще использовать @BeforeAll в базовом классе
 @ExtendWith(ClassPreloadingExtensionWithAtomic::class)
 @ExtendWith(ForkJoinPoolMonitoringExtension::class)
 @Execution(ExecutionMode.CONCURRENT)

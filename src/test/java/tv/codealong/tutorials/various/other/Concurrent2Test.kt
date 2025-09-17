@@ -37,6 +37,13 @@ class Concurrent2Test {
     fun test1() {
         println("Test 1 started on thread: ${Thread.currentThread().name}")
         TimeUnit.MILLISECONDS.sleep(500)
+
+        // Предварительная загрузка классов
+        //Просто для примера
+        //PreloadUtilsExtended.preloadClassesFor(Concurrent2Test::class.java)
+        // Вручную для конкретного класса
+        //PreloadUtilsExtended.preloadClassesFor(UserServiceTest::class.java)
+
     }
 
     @Test

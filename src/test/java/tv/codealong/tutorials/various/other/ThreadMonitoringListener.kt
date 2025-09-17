@@ -7,6 +7,9 @@ import tv.codealong.tutorials.various.locks.ForkJoinPoolMonitor
 import java.lang.management.ManagementFactory
 import java.util.concurrent.ForkJoinPool
 
+/**
+ * Глобально для всех тестов
+ */
 class ThreadMonitoringListener : TestExecutionListener {
 
     private val forkJoinPool = ForkJoinPool.commonPool()
