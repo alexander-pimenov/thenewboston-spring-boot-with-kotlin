@@ -17,6 +17,7 @@ class GlobalPreloadListener : TestExecutionListener {
 
         // 1. Предзагрузка common классов
         preloadCommonClasses()
+        //https://youtu.be/VELjPMxjM9Y?si=gA_LN_QSi6JjkNr9
 
         // 2. Предзагрузка классов из тестового плана
         preloadTestClasses(testPlan)
