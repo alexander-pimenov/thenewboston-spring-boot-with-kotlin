@@ -55,6 +55,13 @@ dependencies {
     //kafka
     implementation("org.springframework.kafka:spring-kafka")
 
+    //ktor-client
+    implementation("io.ktor:ktor-client-core:2.3.4")
+    implementation("io.ktor:ktor-client-cio:2.3.4")
+    implementation("io.ktor:ktor-client-content-negotiation:2.3.4")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.4")
+
+
     //awaitility
     implementation("org.awaitility:awaitility:3.0.0")
     testImplementation("org.awaitility:awaitility:3.0.0")
@@ -93,6 +100,17 @@ dependencies {
     runtimeOnly("com.h2database:h2")
     annotationProcessor("org.projectlombok:lombok")
 
+    //wiremock
+    implementation("org.wiremock:wiremock-standalone:3.9.2")
+
+    testImplementation("org.wiremock:wiremock-standalone:3.9.2")
+
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+    testImplementation("com.github.tomakehurst:wiremock-jre8:2.35.0")
+    testImplementation("io.ktor:ktor-client-core:2.3.4")
+    testImplementation("io.ktor:ktor-client-cio:2.3.4")
+    testImplementation("io.ktor:ktor-client-content-negotiation:2.3.4")
+    testImplementation("io.ktor:ktor-serialization-kotlinx-json:2.3.4")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.mockk:mockk:${mockkVersion}")
     testImplementation("com.ninja-squad:springmockk:${springmockkVersion}")
@@ -103,7 +121,6 @@ dependencies {
     // https://mvnrepository.com/artifact/org.junit.platform/junit-platform-engine
     testImplementation("org.junit.platform:junit-platform-engine")
 //    testImplementation("org.springframework.security:spring-security-test")
-
 
 
     //implementation(kotlin("stdlib-jdk8"))
