@@ -101,12 +101,17 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok")
 
     //wiremock
-    implementation("org.wiremock:wiremock-standalone:3.9.2")
+    //implementation("org.wiremock:wiremock-standalone:3.9.2")
+
+    // Добавляем Jetty вручную
+//    testImplementation("org.eclipse.jetty:jetty-server:9.4.51.v20230217")
+//    testImplementation("org.eclipse.jetty:jetty-servlet:9.4.51.v20230217")
+//    testImplementation("org.eclipse.jetty:jetty-util:9.4.51.v20230217")
 
     testImplementation("org.wiremock:wiremock-standalone:3.9.2")
-
+//    testImplementation("javax.servlet:javax.servlet-api:4.0.1")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
-    testImplementation("com.github.tomakehurst:wiremock-jre8:2.35.0")
+//    testImplementation("com.github.tomakehurst:wiremock-jre8:2.35.0")
     testImplementation("io.ktor:ktor-client-core:2.3.4")
     testImplementation("io.ktor:ktor-client-cio:2.3.4")
     testImplementation("io.ktor:ktor-client-content-negotiation:2.3.4")

@@ -1,7 +1,5 @@
 package tv.codealong.tutorials.various.sendingresulasynchronously
 
-import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock.*
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -98,21 +96,21 @@ fun CoroutineScope.launchTask(taskId: Int, resources: List<ReentrantLock>) = lau
  */
 fun main(): Unit = runBlocking {
 
-    // создаём WireMock для имитации API
-    val wmServer = WireMockServer(8098)
-    wmServer.start()
-    while (!wmServer.isRunning) {
-        Thread.sleep(100)
-    }
-    println("WireMock запущен на порту ${wmServer.port()}")
-    Thread.sleep(500)
+    // создаём WireMock для имитации API - не работает, выдает ошибку - Caused by: java.net.ConnectException: Connection refused: getsockopt
+//    val wmServer = WireMockServer(8098)
+//    wmServer.start()
+//    while (!wmServer.isRunning) {
+//        Thread.sleep(100)
+//    }
+//    println("WireMock запущен на порту ${wmServer.port()}")
+//    Thread.sleep(500)
     //создадим стаб для ответа
-    wmServer.stubFor(
-        post(urlPathTemplate("/task/result"))
-            .willReturn(
-                aResponse().withStatus(200)
-            )
-    )
+//    wmServer.stubFor(
+//        post(urlPathTemplate("/task/result"))
+//            .willReturn(
+//                aResponse().withStatus(200)
+//            )
+//    )
     try {
         val lockA = ReentrantLock()
         val lockB = ReentrantLock()
@@ -122,6 +120,6 @@ fun main(): Unit = runBlocking {
         launchTask(2, listOf(lockB, lockC))
         launchTask(3, listOf(lockA, lockC))
     } finally {
-        wmServer.stop()
+        //wmServer.stop()
     }
 }
