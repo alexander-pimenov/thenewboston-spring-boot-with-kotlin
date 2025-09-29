@@ -34,7 +34,7 @@ fun main() {
 fun retryLock(first: Resource, second: Resource, threadName: String, maxAttempts: Int = 5) {
     var attempt = 1
     while (attempt <= maxAttempts) {
-        println("$threadName: Attempt $attempt to lock ${first.name} and ${second.name}")
+        println("$threadName: Попытка $attempt to lock ${first.name} and ${second.name}")
         try {
             if (first.lock.tryLock(300, TimeUnit.MILLISECONDS)) {
                 try {
