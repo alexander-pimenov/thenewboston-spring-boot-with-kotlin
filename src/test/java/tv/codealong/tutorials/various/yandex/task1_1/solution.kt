@@ -129,6 +129,7 @@ class LimitCheckingSystem {
         return locks.getOrPut(userId) { Any() }
     }
 
+    // Добавляем лимит в систему
     fun addLimit(limit: Limit) {
         limits.add(limit)
     }
@@ -144,12 +145,13 @@ class LimitCheckingSystem {
      *  - Каждый клиент стоит в своей очереди к своему кассиру
      *  - Один клиент не может одновременно быть у двух кассиров
      *  - Разные клиенты обслуживаются параллельно
-     *
      */
     fun processPayment(payment: Payment): LimitCheckResult {
 
         // "Ведём клиента в его персональную комнату"
         synchronized(getLock(payment.userId)) {
+            // "В комнате есть только один клиент" - это гарантирует блокировка. Для информации выводим его идентификатор и объект блокировки
+            println("--- [для информации: пользователь ${payment.userId} блокируемся на каком объекте: ${getLock(payment.userId)}] ---")
             // "Работаем только с этим клиентом"
             val userContext = userContexts.getOrPut(payment.userId) {
                 UserContext(payment.userId)
