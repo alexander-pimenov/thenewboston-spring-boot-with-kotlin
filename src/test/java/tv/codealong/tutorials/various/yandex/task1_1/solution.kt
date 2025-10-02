@@ -22,16 +22,25 @@ import java.time.LocalDateTime
 // 1. Сначала определим основные модели данных
 // Kotlin sealed classes идеальны для представления ограниченного набора возможных
 // результатов. Компилятор будет проверять exhaustiveness в when-выражениях.
+//Для LimitCheckResult я выбрал sealed class потому что:
+//- Это простая иерархия в одном файле
+//- Нет необходимости расширять из других модулей
+//- В будущем могу добавить общие методы/свойства
 sealed class LimitCheckResult {
     data object Approved : LimitCheckResult()
     data class Rejected(val reason: String) : LimitCheckResult()
+
+    // Можем добавить методы
+    fun isApproved(): Boolean = this is Approved
+    fun getReasonOrNull(): String? = (this as? Rejected)?.reason
+
 }
 
 data class Payment(
     val userId: String,
     val amount: BigDecimal,
     val currency: String,
-    val timestamp: LocalDateTime = LocalDateTime.now()
+    val timestamp: LocalDateTime = LocalDateTime.now(),
 )
 
 // 2. Интерфейс для лимитов - это ключевой паттерн!
@@ -46,12 +55,12 @@ data class UserContext(
     val userId: String,
     val paymentHistory: List<Payment> = emptyList(),
     val dailySpent: BigDecimal = BigDecimal.ZERO,
-    val monthlySpent: BigDecimal = BigDecimal.ZERO
+    val monthlySpent: BigDecimal = BigDecimal.ZERO,
 )
 
 // 4.1. Реализации конкретных лимитов - дневной лимит
 class DailyAmountLimit(
-    private val maxDailyAmount: BigDecimal
+    private val maxDailyAmount: BigDecimal,
 ) : Limit {
     override val name: String = "DAILY_AMOUNT_LIMIT"
     override val description: String = "Максимальная сумма платежей в день: $maxDailyAmount"
@@ -68,7 +77,7 @@ class DailyAmountLimit(
 
 // 4.2. Реализации конкретных лимитов - разовый лимит
 class SinglePaymentLimit(
-    private val maxSingleAmount: BigDecimal
+    private val maxSingleAmount: BigDecimal,
 ) : Limit {
     override val name: String = "SINGLE_PAYMENT_LIMIT"
     override val description: String = "Максимальная сумма одного платежа: $maxSingleAmount"
@@ -84,7 +93,7 @@ class SinglePaymentLimit(
 
 // 4.3. Реализации конкретных лимитов - месячный лимит
 class MonthlyCountLimit(
-    private val maxMonthlyPayments: Int
+    private val maxMonthlyPayments: Int,
 ) : Limit {
     override val name: String = "MONTHLY_COUNT_LIMIT"
     override val description: String = "Максимальное количество платежей в месяц: $maxMonthlyPayments"
