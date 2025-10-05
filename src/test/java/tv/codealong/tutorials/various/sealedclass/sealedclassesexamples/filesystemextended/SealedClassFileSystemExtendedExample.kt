@@ -13,6 +13,9 @@ import java.time.LocalDateTime
 //
 // ✅ Файловая система
 // ✅ Улучшенная файловая система с реальными методами
+import java.time.LocalDateTime
+
+// ✅ Исправленный sealed class
 sealed class FileSystemNode(
     val name: String,
     val created: LocalDateTime = LocalDateTime.now(),
@@ -31,7 +34,6 @@ sealed class FileSystemNode(
             🔐 Права: $permissions
             🕐 Создан: $created
             ✏️ Изменён: $modified
-            👤 Владелец: ${getOwner()}
         """.trimIndent()
     }
 
@@ -41,7 +43,6 @@ sealed class FileSystemNode(
         return java.time.Duration.between(modified, LocalDateTime.now()).toDays()
     }
 
-    abstract fun getOwner(): String
     abstract fun copy(newPath: String): FileSystemNode
 
     // Форматирование размера файла
@@ -60,14 +61,12 @@ data class File(
     val extension: String,
     val parentPath: String = "/",
     override val permissions: String = "rw-r--r--",
-    val owner: String = "user"
+    val fileName: String = "file" // отдельное поле для имени файла
 ) : FileSystemNode(
-    name = "file.${if (extension.isNotEmpty()) ".$extension" else ""}",
+    name = if (extension.isNotEmpty()) "$fileName.$extension" else fileName, // передаём в родительский конструктор
     size = content.toByteArray().size.toLong()
 ) {
     override val path: String = "$parentPath/$name"
-
-    override fun getOwner(): String = owner
 
     override fun copy(newPath: String): FileSystemNode {
         return this.copy(parentPath = newPath)
@@ -92,6 +91,7 @@ data class File(
             "jpg", "png", "gif" -> "Image File"
             "mp4", "avi" -> "Video File"
             "mp3", "wav" -> "Audio File"
+            "kt", "java" -> "Source Code"
             else -> "Unknown File Type"
         }
     }
@@ -102,14 +102,12 @@ data class Directory(
     val children: List<FileSystemNode> = emptyList(),
     val parentPath: String = "/",
     override val permissions: String = "rwxr-xr-x",
-    val owner: String = "user"
+    val dirName: String = "directory" // отдельное поле для имени директории
 ) : FileSystemNode(
-    name = "directory",
+    name = dirName, // передаём в родительский конструктор
     size = children.sumOf { it.size }
 ) {
     override val path: String = "$parentPath/$name"
-
-    override fun getOwner(): String = owner
 
     override fun copy(newPath: String): FileSystemNode {
         return this.copy(parentPath = newPath)
@@ -153,14 +151,12 @@ data class SymLink(
     val target: FileSystemNode,
     val parentPath: String = "/",
     override val permissions: String = "rwxrwxrwx",
-    val owner: String = "user"
+    val linkName: String = "link" // отдельное поле для имени ссылки
 ) : FileSystemNode(
-    name = "link_to_${target.name}",
+    name = "link_to_${target.name}", // передаём в родительский конструктор
     size = 64 // symbolic links have small fixed size
 ) {
     override val path: String = "$parentPath/$name"
-
-    override fun getOwner(): String = owner
 
     override fun copy(newPath: String): FileSystemNode {
         return this.copy(parentPath = newPath)
@@ -175,11 +171,11 @@ data class SymLink(
     }
 }
 
-// 🎯 ПРИМЕР ИСПОЛЬЗОВАНИЯ
+// 🎯 ИСПРАВЛЕННЫЙ ПРИМЕР ИСПОЛЬЗОВАНИЯ
 fun main() {
     println("=== 🗂️ ФАЙЛОВАЯ СИСТЕМА ===")
 
-    // Создаём файлы
+    // Создаём файлы (теперь с правильными параметрами)
     val readme = File(
         content = """
             # My Project
@@ -187,7 +183,7 @@ fun main() {
             with multiple lines of text
         """.trimIndent(),
         extension = "md",
-        owner = "developer"
+        fileName = "README" // задаём имя файла
     )
 
     val config = File(
@@ -197,34 +193,43 @@ fun main() {
             database.url=localhost:5432
         """.trimIndent(),
         extension = "properties",
-        owner = "admin"
+        fileName = "config"
     )
 
     val image = File(
-        content = "fake image content", // в реальности это были бы байты
+        content = "fake image content",
         extension = "jpg",
-        owner = "user"
+        fileName = "photo"
     )
 
-    // Создаём поддиректорию
+    // Создаём поддиректорию (теперь с правильными параметрами)
     val srcDirectory = Directory(
         children = listOf(
-            File(content = "fun main() {}", extension = "kt", owner = "developer"),
-            File(content = "class User {}", extension = "kt", owner = "developer")
+            File(
+                content = "fun main() {}",
+                extension = "kt",
+                fileName = "Main"
+            ),
+            File(
+                content = "class User {}",
+                extension = "kt",
+                fileName = "User"
+            )
         ),
-        name = "src",
-        owner = "developer"
+        dirName = "src" // задаём имя директории
     )
 
-    // Создаём корневую директорию
+    // Создаём корневую директорию (теперь с правильными параметрами)
     val rootDirectory = Directory(
         children = listOf(readme, config, image, srcDirectory),
-        name = "projects",
-        owner = "root"
+        dirName = "projects" // задаём имя директории
     )
 
-    // Создаём символическую ссылку
-    val readmeLink = SymLink(target = readme, name = "quick_start")
+    // Создаём символическую ссылку (теперь с правильными параметрами)
+    val readmeLink = SymLink(
+        target = readme,
+        linkName = "quick_start"
+    )
 
     // 🔍 АНАЛИЗИРУЕМ ФАЙЛОВУЮ СИСТЕМУ
     analyzeFileSystem(rootDirectory)
@@ -234,11 +239,14 @@ fun main() {
 
     println("\n=== 🛠️ ОПЕРАЦИИ С ФАЙЛАМИ ===")
     fileOperationsDemo(readme)
+
+    println("\n=== 🔗 ТЕСТИРУЕМ ССЫЛКИ ===")
+    testSymLink(readmeLink)
 }
 
 fun analyzeFileSystem(directory: Directory) {
     println("📊 АНАЛИЗ ДИРЕКТОРИИ: ${directory.name}")
-    println("==================================================")
+    println("=" * 50)
 
     println("📁 Общая информация:")
     println(directory.getInfo())
@@ -248,7 +256,7 @@ fun analyzeFileSystem(directory: Directory) {
         when (node) {
             is File -> {
                 println("📄 ${node.name} (${node.getFileType()}) - ${node.size}")
-                if (node.extension == "md") {
+                if (node.extension == "md" || node.extension == "kt") {
                     println("   📝 Строк: ${node.getLineCount()}")
                 }
             }
@@ -299,5 +307,17 @@ fun fileOperationsDemo(file: File) {
         println("   ${index + 1}: $line")
     }
 
-    println("... и ещё ${updatedFile.getLineCount() - 3} строк")
+    if (updatedFile.getLineCount() > 3) {
+        println("... и ещё ${updatedFile.getLineCount() - 3} строк")
+    }
 }
+
+fun testSymLink(symLink: SymLink) {
+    println("🔗 Тестируем символическую ссылку: ${symLink.name}")
+    println("🎯 Цель: ${symLink.resolveTarget().name}")
+    println("❌ Ссылка битая: ${symLink.isBroken()}")
+    println("📊 Размер ссылки: ${symLink.size} bytes")
+}
+
+// Вспомогательная функция для повторения строк
+operator fun String.times(n: Int): String = repeat(n)
