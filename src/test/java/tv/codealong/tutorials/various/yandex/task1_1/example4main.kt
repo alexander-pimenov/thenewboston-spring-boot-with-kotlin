@@ -2,6 +2,7 @@ package tv.codealong.tutorials.various.yandex.task1_1
 
 import java.math.BigDecimal
 
+// 6. Пример использования
 // Упрощённый пример для быстрого тестирования (без потоков):
 fun main() {
     simpleThreeUsersExample()

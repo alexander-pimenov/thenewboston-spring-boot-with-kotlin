@@ -2,6 +2,7 @@ package tv.codealong.tutorials.various.yandex.task1_1
 
 import java.math.BigDecimal
 
+// 6. Пример использования
 fun main() {
     println("=== ПАРАЛЛЕЛЬНАЯ ОБРАБОТКА 3-Х ПОЛЬЗОВАТЕЛЕЙ ===")
 
