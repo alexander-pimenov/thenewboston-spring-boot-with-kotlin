@@ -180,6 +180,7 @@ fun copyData(source: MutableList<out Animal>, destination: MutableList<in Animal
     for (animal in source) {
         destination.add(animal) // ✅ Безопасно
     }
+    println("list destination: $destination")
 }
 
 fun main() {
