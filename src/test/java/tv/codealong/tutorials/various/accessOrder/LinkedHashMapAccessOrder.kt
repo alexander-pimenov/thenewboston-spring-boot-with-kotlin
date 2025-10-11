@@ -68,6 +68,7 @@ fun main() {
         println("$key: $value")
     }
     println("-----------")
+    demonstrateLRU()
 
 }
 
