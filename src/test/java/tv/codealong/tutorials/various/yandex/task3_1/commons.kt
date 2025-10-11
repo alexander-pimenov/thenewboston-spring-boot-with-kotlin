@@ -180,6 +180,7 @@ class InMemoryCache<K, V> private constructor(
 
     /**
      * 🔄 Для LRU - отслеживаем порядок доступа
+     * Цель: Отслеживать порядок доступа к элементам, чтобы знать какой элемент давно не использовался (Least Recently Used)
      *
      * * Зачем Collections.synchronizedMap:
      *   Делает LinkedHashMap thread-safe. Без этого в многопоточной среде может произойти:

@@ -54,9 +54,9 @@ fun main() {
     println("-----------")
 
     //Если я хочу переопределить override fun removeEldestEntry, то нужно создать новый объект через object !!!
-    val map3 = object : LinkedHashMap<String, String>(initialCapacity = 3, loadFactor = 0.75f, accessOrder = true) {
+    val map3 = object : LinkedHashMap<String, String>( 3,  0.75f,  true) {
         override fun removeEldestEntry(eldest: Map.Entry<String, String>): Boolean {
-            return size > 3
+            return size > 3 // 3 - максимальное количество элементов
         }
     }
     map3["A"] = "1" // [A]
@@ -73,7 +73,8 @@ fun main() {
 }
 
 /**
- * ЦИКЛ РАБОТЫ LRU:
+ * ЦИКЛ РАБОТЫ LRU
+ * Цель: Отслеживать порядок доступа к элементам, чтобы знать какой элемент давно не использовался (Least Recently Used)
  */
 fun demonstrateLRU() {
     val lruCache = Collections.synchronizedMap(
