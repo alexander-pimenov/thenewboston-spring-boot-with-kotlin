@@ -32,39 +32,90 @@ class TokenBucketState : RateLimitState {
 
     override fun tryAcquire(config: RateLimitConfig): RateLimitResult {
         val now = Instant.now()
-        val updatedState = state.updateAndGet { currentState ->
-            // 1. Пополняем токены based on time passed
-            val timePassed = java.time.Duration.between(currentState.lastRefillTime, now).toMillis()
-            val refillAmount = (timePassed / config.windowSize.toMillis()) * config.maxRequests
+        var allowed = false
+        var remainingTokens = 0.0
 
-            val newTokens = min(
-                config.maxRequests.toDouble(), // Не больше максимума
-                currentState.tokens + refillAmount
-            )
+        val updatedState = state.updateAndGet { currentState ->
+            // 1. Пополняем токены на основе прошедшего времени
+            val timePassedMs = java.time.Duration.between(currentState.lastRefillTime, now).toMillis()
+            val windowSizeMs = config.windowSize.toMillis()
+
+            val refillAmount = (timePassedMs.toDouble() / windowSizeMs.toDouble()) * config.maxRequests
+            val newTokens = min(config.maxRequests.toDouble(), currentState.tokens + refillAmount)
 
             // 2. Пытаемся взять токен
-            val tokensAfterAcquire = newTokens - 1.0
-
-            BucketState(
-                tokens = tokensAfterAcquire,
-                lastRefillTime = now
-            )
+            if (newTokens >= 1.0) {
+                allowed = true
+                remainingTokens = newTokens - 1.0
+                BucketState(tokens = remainingTokens, lastRefillTime = now)
+            } else {
+                allowed = false
+                remainingTokens = newTokens
+                BucketState(tokens = newTokens, lastRefillTime = now)
+            }
         }
 
-        val allowed = updatedState.tokens >= 0
-        val remaining = maxOf(0, updatedState.tokens.toInt())
+        val remaining = maxOf(0, remainingTokens.toInt())
 
         return RateLimitResult(
             allowed = allowed,
             remaining = remaining,
-            resetTime = calculateResetTime(now, config),
+            resetTime = calculateResetTime(now, config, remainingTokens),
             limit = config.maxRequests,
             algorithm = config.algorithm
         )
     }
 
-    private fun calculateResetTime(now: Instant, config: RateLimitConfig): Instant {
-        // Время, когда ведро полностью наполнится
-        return now.plus(config.windowSize)
+    private fun calculateResetTime(now: Instant, config: RateLimitConfig, currentTokens: Double): Instant {
+        if (currentTokens >= config.maxRequests) {
+            // Ведро полное - сброс когда истечёт текущее окно
+            return now.plus(config.windowSize)
+        }
+
+        // Рассчитываем когда ведро наполнится до максимума
+        val tokensToFill = config.maxRequests - currentTokens
+        val fillRate = config.maxRequests.toDouble() / config.windowSize.toMillis()
+        val timeToFillMs = (tokensToFill / fillRate).toLong()
+
+        return now.plusMillis(timeToFillMs)
     }
 }
+
+//override fun tryAcquire(config: RateLimitConfig): RateLimitResult {
+//        val now = Instant.now()
+//
+//
+//        val updatedState = state.updateAndGet { currentState ->
+//            // 1. Пополняем токены based on time passed
+//            val timePassed = java.time.Duration.between(currentState.lastRefillTime, now).toMillis()
+//            val refillAmount = (timePassed / config.windowSize.toMillis()) * config.maxRequests
+//
+//            val newTokens = min(
+//                config.maxRequests.toDouble(), // Не больше максимума
+//                currentState.tokens + refillAmount
+//            )
+//
+//            // 2. Пытаемся взять токен
+//            val tokensAfterAcquire = newTokens - 1.0
+//
+//            BucketState(
+//                tokens = tokensAfterAcquire,
+//                lastRefillTime = now
+//            )
+//        }
+//
+//        val allowed = updatedState.tokens >= 0
+//        val remaining = maxOf(0, updatedState.tokens.toInt())
+//
+//        return RateLimitResult(
+//            allowed = allowed,
+//            remaining = remaining,
+//            resetTime = calculateResetTime(now, config),
+//            limit = config.maxRequests,
+//            algorithm = config.algorithm
+//        )
+//    }
+// private fun calculateResetTime(now: Instant, config: RateLimitConfig): Instant {
+//        // Время, когда ведро полностью наполнится
+//        return now.plus(config.windowSize)
+//    }

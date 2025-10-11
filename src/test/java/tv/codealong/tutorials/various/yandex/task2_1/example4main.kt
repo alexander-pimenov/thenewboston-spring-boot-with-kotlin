@@ -60,3 +60,4 @@ fun testSlidingEffect(rateLimiter: DistributedRateLimiter, userId: String, endpo
         println("  Запрос ${i + 1}: ${if (result.allowed) "✅" else "❌"} (${result.remaining} осталось)")
     }
 }
+

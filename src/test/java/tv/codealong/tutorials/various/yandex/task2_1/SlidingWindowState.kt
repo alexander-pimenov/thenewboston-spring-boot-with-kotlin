@@ -4,7 +4,6 @@ import java.time.Instant
 import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.atomic.AtomicInteger
 
-// 🚪 СОСТОЯНИЕ SLIDING WINDOW ДЛЯ ОДНОГО ПОЛЬЗОВАТЕЛЯ НА ОДНОМ ENDPOINT
 /**
  * 🚪 СОСТОЯНИЕ SLIDING WINDOW ДЛЯ ОДНОГО ПОЛЬЗОВАТЕЛЯ НА ОДНОМ ENDPOINT
  * 🎯 Sliding Window Algorithm
@@ -36,6 +35,8 @@ class SlidingWindowState : RateLimitState {
     private val segments = ConcurrentSkipListMap<Long, AtomicInteger>()
 
     override var lastAccess: Instant = Instant.now()
+
+    //fun getLastAccess(): Instant = lastAccess
 
     override fun tryAcquire(config: RateLimitConfig): RateLimitResult {
         val now = Instant.now()
@@ -105,6 +106,4 @@ class SlidingWindowState : RateLimitState {
             null
         }
     }
-
-     fun getLastAccess(): Instant = lastAccess
 }

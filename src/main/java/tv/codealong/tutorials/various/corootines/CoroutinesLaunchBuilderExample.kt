@@ -36,6 +36,18 @@ suspend fun main(): Unit = coroutineScope {
     }
 }
 
+@OptIn(DelicateCoroutinesApi::class)
+fun launchAsync(
+    coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    lambda: () -> Unit,
+) {
+    GlobalScope.launch(coroutineDispatcher) {
+        runCatching { lambda.invoke() }.onFailure {
+            println() { "Событие не выполнено в следствии исключения: [ $it ]" }
+        }
+    }
+}
+
 
 
 

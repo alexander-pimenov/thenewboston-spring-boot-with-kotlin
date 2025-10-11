@@ -118,3 +118,4 @@ fun testMetrics() {
     val unknownMetrics = rateLimiter.getMetrics("unknown")
     println("Неизвестный пользователь: $unknownMetrics") // ✅ Выведет null
 }
+

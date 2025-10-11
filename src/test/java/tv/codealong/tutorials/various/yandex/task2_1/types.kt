@@ -12,11 +12,11 @@ enum class RateLimitAlgorithm {
 }
 
 data class RateLimitResult(
-    val allowed: Boolean,
-    val remaining: Int,
+    val allowed: Boolean,           //разрешено
+    val remaining: Int,             //оставшееся
     val resetTime: java.time.Instant? = null,
     val limit: Int,
-    val algorithm: RateLimitAlgorithm,
+    val algorithm: RateLimitAlgorithm,  //алгоритм
 )
 
 // 🎯 Основной интерфейс
