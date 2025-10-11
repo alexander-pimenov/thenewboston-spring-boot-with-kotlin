@@ -177,7 +177,38 @@ class InMemoryCache<K, V> private constructor(
     // ⏰ Механизм очистки
     private val cleanupExecutor = Executors.newScheduledThreadPool(1)
 
-    // 🔄 Для LRU - отслеживаем порядок доступа
+
+    /**
+     * 🔄 Для LRU - отслеживаем порядок доступа
+     *
+     * * Зачем Collections.synchronizedMap:
+     *   Делает LinkedHashMap thread-safe. Без этого в многопоточной среде может произойти:
+     * - ConcurrentModificationException
+     * - Повреждение внутренней структуры данных
+     * - Непредсказуемое поведение
+     *
+     *  * LinkedHashMap с accessOrder = true
+     *  LinkedHashMap<K, CacheEntry<V>>(16, 0.75f, true)
+     *  //                              ↑      ↑     ↑
+     *  //                          размер loadFactor accessOrder
+     *  Что это значит:
+     *  - 16 - начальная вместимость (как ArrayList capacity). В нашей реализации не используется. Просто нужен для конструктора.
+     *  - 0.75f - load factor (когда HashMap увеличивается в размере)
+     *  - true - ключевой параметр! Включает ordering по доступу.
+     *
+     *  * removeEldestEntry - "Волшебный метод"
+     *
+     *   override fun removeEldestEntry(eldest: MutableMap.MutableEntry<K, CacheEntry<V>>?): Boolean {
+     *       return size > config.maxSize
+     *   }
+     *  Как работает:
+     *  - Вызывается автоматически при КАЖДОМ добавлении нового элемента
+     *  - eldest - самый старый элемент (первый в LinkedHashMap)
+     *  - Если возвращаем true - eldest удаляется автоматически
+     *
+     * Пример использования можно посмотреть тут @see tv/codealong/tutorials/various/accessOrder/LinkedHashMapAccessOrder.kt
+     *
+     */
     private val accessOrderMap = Collections.synchronizedMap(
         object : LinkedHashMap<K, CacheEntry<V>>(16, 0.75f, true) {
             override fun removeEldestEntry(eldest: MutableMap.MutableEntry<K, CacheEntry<V>>?): Boolean {
@@ -224,7 +255,8 @@ class InMemoryCache<K, V> private constructor(
 
         // Проверяем не превысили ли лимит (только для LRU и FIFO)
         if (storage.size > config.maxSize &&
-            config.evictionPolicy in setOf(EvictionPolicy.LRU, EvictionPolicy.FIFO)) {
+            config.evictionPolicy in setOf(EvictionPolicy.LRU, EvictionPolicy.FIFO)
+        ) {
             evictOneEntry()
         }
 
