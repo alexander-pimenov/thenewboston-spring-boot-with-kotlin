@@ -8,26 +8,29 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 
 /**
+ * 🎯 **ЗАДАЧА: In-Memory Cache с TTL**
+ *
  * 🔍 ШАГ 1: Декомпозиция задачи
  * Давай разобьём на подзадачи:
  *
  * kotlin
- * // 1. 📦 Хранение данных: как хранить пары ключ-значение + TTL?
- * // 2. ⏰ Управление временем жизни: как отслеживать и удалять просроченное?
- * // 3. 🔒 Безопасность: как сделать thread-safe?
- * // 4. 📊 Метрики: как считать hit/miss?
- * // 5. 🗑️ Вытеснение: что делать при переполнении?
- * // 6. ⚙️ Конфигурация: настройки TTL, размера, стратегий
+ *  1. 📦 Хранение данных: как хранить пары ключ-значение + TTL?
+ *  2. ⏰ Управление временем жизни: как отслеживать и удалять просроченное?
+ *  3. 🔒 Безопасность: как сделать thread-safe?
+ *  4. 📊 Метрики: как считать hit/miss?
+ *  5. 🗑️ Вытеснение: что делать при переполнении?
+ *  6. ⚙️ Конфигурация: настройки TTL, размера, стратегий
+ *
  * 🏗️ ШАГ 2: Определение сущностей
  * Вопрос 1: "Что представляет собой запись в кеше?"
  * kotlin
- * // Запись должна хранить:
- * // - Значение (любого типа)
- * // - Время создания (для TTL)
- * // - Время последнего доступа (для LRU)
- * // - Размер данных (для ограничения памяти)
+ *  Запись должна хранить:
+ *  - Значение (любого типа)
+ *  - Время создания (для TTL)
+ *  - Время последнего доступа (для LRU)
+ *  - Размер данных (для ограничения памяти)
  *
- * // ✅ Решение: data class для записи
+ *  ✅ Решение: data class для записи
  * data class CacheEntry<V>(
  *     val value: V,
  *     val createdAt: Instant = Instant.now(),
@@ -35,34 +38,34 @@ import java.util.concurrent.atomic.AtomicLong
  *     val size: Long = 1 // упрощённо, в реальности можно считать байты
  * )
  * Вопрос 2: "Как управлять TTL?"
- * kotlin
+ *
  * // Нужно периодически проверять и удалять просроченные записи
  * // → Отдельный механизм cleanup'а
  *
- * // ✅ Решение: Scheduled executor для фоновой очистки
+ *  ✅ Решение: Scheduled executor для фоновой очистки
  * private val cleanupExecutor = Executors.newScheduledThreadPool(1)
  * Вопрос 3: "Как считать метрики thread-safe?"
- * kotlin
+ *
  * // Множество потоков будет обновлять счётчики
  * // → Атомарные счётчики
  *
- * // ✅ Решение: AtomicLong для метрик
+ *  ✅ Решение: AtomicLong для метрик
  * private val hitCount = AtomicLong(0)
  * private val missCount = AtomicLong(0)
  * 🎯 ШАГ 3: Выбор структур данных
  * Вопрос 4: "Как хранить данные для быстрого доступа?"
- * kotlin
+ *
  * // Нужен быстрый поиск по ключу → HashMap
  * // Но обычный HashMap не thread-safe → ConcurrentHashMap
  *
- * // ✅ Решение:
+ *  ✅ Решение:
  * private val storage = ConcurrentHashMap<K, CacheEntry<V>>()
  * Вопрос 5: "Как реализовать LRU (Least Recently Used)?"
- * kotlin
+ *
  * // LRU требует знать порядок доступа к элементам
  * // → LinkedHashMap или собственная реализация с doubly-linked list
  *
- * // ✅ Решение: используем LinkedHashMap с accessOrder = true
+ *  ✅ Решение: используем LinkedHashMap с accessOrder = true
  * private val accessOrderMap = Collections.synchronizedMap(
  *     LinkedHashMap<K, CacheEntry<V>>(16, 0.75f, true) // true = access ordering
  * )

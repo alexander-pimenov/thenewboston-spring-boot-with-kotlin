@@ -8,6 +8,8 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 
 /**
+ * 🎯 **ЗАДАЧА: In-Memory Cache с TTL**
+ *
  * 🔍 ШАГ 1: Декомпозиция задачи
  * Давай разобьём на подзадачи:
  *
