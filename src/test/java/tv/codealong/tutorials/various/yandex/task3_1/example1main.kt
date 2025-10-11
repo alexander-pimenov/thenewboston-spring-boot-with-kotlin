@@ -14,7 +14,7 @@ fun main() {
     // Тест 1: Базовые операции
     println("🔹 ТЕСТ 1: Базовые операции put/get")
     cache.put("key1", "value1")
-    cache.put("key2", "value2", java.time.Duration.ofSeconds(3)) // Короткий TTL
+    cache.put("key2", "value2", java.time.Duration.ofSeconds(3)) // Короткий TTL, чтобы не ждать 10 секунд, задаём своё.
 
     println("key1: ${cache.get("key1")}") // ✅ value1
     println("key2: ${cache.get("key2")}") // ✅ value2
