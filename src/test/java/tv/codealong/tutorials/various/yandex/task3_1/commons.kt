@@ -13,7 +13,6 @@ import java.util.concurrent.atomic.AtomicLong
  * 🔍 ШАГ 1: Декомпозиция задачи
  * Давай разобьём на подзадачи:
  *
- * kotlin
  *  1. 📦 Хранение данных: как хранить пары ключ-значение + TTL?
  *  2. ⏰ Управление временем жизни: как отслеживать и удалять просроченное?
  *  3. 🔒 Безопасность: как сделать thread-safe?
@@ -23,7 +22,7 @@ import java.util.concurrent.atomic.AtomicLong
  *
  * 🏗️ ШАГ 2: Определение сущностей
  * Вопрос 1: "Что представляет собой запись в кеше?"
- * kotlin
+ *
  *  Запись должна хранить:
  *  - Значение (любого типа)
  *  - Время создания (для TTL)
@@ -31,44 +30,52 @@ import java.util.concurrent.atomic.AtomicLong
  *  - Размер данных (для ограничения памяти)
  *
  *  ✅ Решение: data class для записи
+ * ```kotlin
  * data class CacheEntry<V>(
  *     val value: V,
  *     val createdAt: Instant = Instant.now(),
  *     var lastAccessed: Instant = Instant.now(),
  *     val size: Long = 1 // упрощённо, в реальности можно считать байты
  * )
+ * ```
+ *
  * Вопрос 2: "Как управлять TTL?"
  *
- * // Нужно периодически проверять и удалять просроченные записи
- * // → Отдельный механизм cleanup'а
+ * // Нужно периодически проверять и удалять просроченные записи → Отдельный механизм cleanup'а
  *
  *  ✅ Решение: Scheduled executor для фоновой очистки
+ *  ```kotlin
  * private val cleanupExecutor = Executors.newScheduledThreadPool(1)
+ * ```
  * Вопрос 3: "Как считать метрики thread-safe?"
  *
- * // Множество потоков будет обновлять счётчики
- * // → Атомарные счётчики
+ * // Множество потоков будет обновлять счётчики → Атомарные счётчики
  *
  *  ✅ Решение: AtomicLong для метрик
+ * ```kotlin
  * private val hitCount = AtomicLong(0)
  * private val missCount = AtomicLong(0)
+ * ```
  * 🎯 ШАГ 3: Выбор структур данных
+ *
  * Вопрос 4: "Как хранить данные для быстрого доступа?"
  *
- * // Нужен быстрый поиск по ключу → HashMap
- * // Но обычный HashMap не thread-safe → ConcurrentHashMap
+ * // Нужен быстрый поиск по ключу → HashMap. Но обычный HashMap не thread-safe → ConcurrentHashMap
  *
  *  ✅ Решение:
+ * ```kotlin
  * private val storage = ConcurrentHashMap<K, CacheEntry<V>>()
+ * ```
  * Вопрос 5: "Как реализовать LRU (Least Recently Used)?"
  *
- * // LRU требует знать порядок доступа к элементам
- * // → LinkedHashMap или собственная реализация с doubly-linked list
+ * // LRU требует знать порядок доступа к элементам → LinkedHashMap с accessOrder=true или собственная реализация с doubly-linked list
  *
  *  ✅ Решение: используем LinkedHashMap с accessOrder = true
+ *  ```kotlin
  * private val accessOrderMap = Collections.synchronizedMap(
  *     LinkedHashMap<K, CacheEntry<V>>(16, 0.75f, true) // true = access ordering
  * )
+ * ```
  */
 // 🎯 1. Сначала определим перечисления для политик в отношении вытеснения и конфигурацию
 enum class EvictionPolicy {
