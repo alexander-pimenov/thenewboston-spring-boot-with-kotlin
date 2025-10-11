@@ -1331,4 +1331,300 @@ fun testLRUSynchronization() {
 
 ---
 
+Отличный вопрос! Да, ты абсолютно прав - нужно обеспечить **полную thread-safe** для всех операций. Давай разберём подробно. 🔍
+
+## 🎯 **КОГДА НУЖЕН synchronized:**
+
+### **Операции, которые МОДИФИЦИРУЮТ состояние:**
+```kotlin
+fun put(key: K, value: V, ttl: java.time.Duration? = null): V? {
+    synchronized(storage) {  // ✅ НУЖЕН - изменяет storage
+        // ...
+    }
+}
+
+fun remove(key: K): V? {
+    synchronized(storage) {  // ✅ НУЖЕН - изменяет storage  
+        return storage.remove(key)?.value
+    }
+}
+
+fun clear() {
+    synchronized(storage) {  // ✅ НУЖЕН - полностью очищает storage
+        storage.clear()
+        hitCount.set(0)
+        missCount.set(0)
+        evictionCount.set(0)
+    }
+}
+
+fun cleanupExpiredEntries() {
+    synchronized(storage) {  // ✅ НУЖЕН - удаляет элементы из storage
+        val iterator = storage.entries.iterator()
+        while (iterator.hasNext()) {
+            val (key, entry) = iterator.next()
+            if (entry.isExpired(config.defaultTTL)) {
+                iterator.remove()
+                evictionCount.incrementAndGet()
+            }
+        }
+    }
+}
+```
+
+### **Операции, которые ТОЛЬКО ЧИТАЮТ состояние:**
+```kotlin
+fun get(key: K): V? {
+    synchronized(storage) {  // ✅ НУЖЕН - может изменить порядок в LinkedHashMap
+        val entry = storage[key]
+        if (entry != null && !entry.isExpired(config.defaultTTL)) {
+            // Даже get может изменить внутреннее состояние LinkedHashMap!
+            // (благодаря accessOrder=true)
+            entry.markAccessed()
+            // storage[key] = entry // Не нужно, LinkedHashMap сам обновит порядок
+            hitCount.incrementAndGet()
+            return entry.value
+        }
+        // ...
+    }
+}
+
+fun containsKey(key: K): Boolean {
+    synchronized(storage) {  // ✅ НУЖЕН - вызывает get внутри
+        return get(key) != null // Используем get для проверки TTL
+    }
+}
+
+fun size(): Int {
+    synchronized(storage) {  // ✅ НУЖЕН - читает размер во время модификации
+        return storage.size
+    }
+}
+```
+
+## 🚨 **ПОЧЕМУ ДАЖЕ "ЧИТАЮЩИЕ" ОПЕРАЦИИ НУЖДАЮТСЯ В synchronized:**
+
+### Проблема с **LinkedHashMap + accessOrder=true**:
+```kotlin
+// БЕЗ synchronized:
+fun get(key: K): V? {
+    val entry = storage[key] // ❌ ОПАСНО!
+    // В этот момент другой поток может изменить storage
+    // И мы получим ConcurrentModificationException
+}
+
+// LinkedHashMap НЕ thread-safe, даже для чтения!
+// Особенно с accessOrder=true - он меняет внутреннюю структуру при доступе
+```
+
+## 🔧 **ПОЛНОСТЬЮ ИСПРАВЛЕННЫЙ КЛАСС:**
+
+```kotlin
+class InMemoryCache<K, V> private constructor(
+    private val config: CacheConfig
+) {
+    private val storage = Collections.synchronizedMap(
+        object : LinkedHashMap<K, CacheEntry<V>>(16, 0.75f, true) {
+            override fun removeEldestEntry(eldest: Map.Entry<K, CacheEntry<V>>): Boolean {
+                return when (config.evictionPolicy) {
+                    EvictionPolicy.LRU -> size > config.maxSize
+                    EvictionPolicy.FIFO -> size > config.maxSize
+                    EvictionPolicy.TTL -> false
+                }
+            }
+        }
+    )
+    
+    private val hitCount = AtomicLong(0)
+    private val missCount = AtomicLong(0)
+    private val evictionCount = AtomicLong(0)
+    private val cleanupExecutor = Executors.newScheduledThreadPool(1)
+    
+    init {
+        cleanupExecutor.scheduleAtFixedRate(
+            { cleanupExpiredEntries() },
+            config.cleanupInterval.toMillis(),
+            config.cleanupInterval.toMillis(),
+            TimeUnit.MILLISECONDS
+        )
+    }
+    
+    // ✅ ВСЕ операции защищены synchronized
+    fun get(key: K): V? {
+        synchronized(storage) {
+            val entry = storage[key]
+            return if (entry != null && !entry.isExpired(config.defaultTTL)) {
+                entry.markAccessed()
+                hitCount.incrementAndGet()
+                entry.value
+            } else {
+                if (entry != null) {
+                    storage.remove(key)
+                }
+                missCount.incrementAndGet()
+                null
+            }
+        }
+    }
+    
+    fun put(key: K, value: V, ttl: java.time.Duration? = null): V? {
+        synchronized(storage) {
+            val previousValue = storage[key]?.value
+            val entry = CacheEntry(value = value, ttl = ttl)
+            storage[key] = entry
+            return previousValue
+        }
+    }
+    
+    fun remove(key: K): V? {
+        synchronized(storage) {
+            return storage.remove(key)?.value
+        }
+    }
+    
+    fun clear() {
+        synchronized(storage) {
+            storage.clear()
+            hitCount.set(0)
+            missCount.set(0)
+            evictionCount.set(0)
+        }
+    }
+    
+    fun containsKey(key: K): Boolean {
+        synchronized(storage) {
+            return get(key) != null // Используем synchronized get
+        }
+    }
+    
+    fun size(): Int {
+        synchronized(storage) {
+            return storage.size
+        }
+    }
+    
+    fun isEmpty(): Boolean {
+        synchronized(storage) {
+            return storage.isEmpty()
+        }
+    }
+    
+    fun getMetrics(): CacheMetrics {
+        synchronized(storage) {
+            return CacheMetrics(
+                hitCount = hitCount.get(),
+                missCount = missCount.get(),
+                evictionCount = evictionCount.get(),
+                currentSize = storage.size,
+                maxSize = config.maxSize
+            )
+        }
+    }
+    
+    fun cleanupExpiredEntries() {
+        synchronized(storage) {
+            val iterator = storage.entries.iterator()
+            var cleanedCount = 0
+            
+            while (iterator.hasNext()) {
+                val (key, entry) = iterator.next()
+                if (entry.isExpired(config.defaultTTL)) {
+                    iterator.remove()
+                    cleanedCount++
+                    evictionCount.incrementAndGet()
+                }
+            }
+            
+            if (cleanedCount > 0) {
+                println("🔄 Очищено $cleanedCount просроченных записей")
+            }
+        }
+    }
+    
+    fun shutdown() {
+        cleanupExecutor.shutdown()
+        // ... остальной код shutdown
+    }
+}
+```
+
+## 🧪 **ТЕСТ НА МНОГОПОТОЧНОСТЬ:**
+
+```kotlin
+fun testConcurrentAccess() {
+    println("=== 🧪 ТЕСТ МНОГОПОТОЧНОГО ДОСТУПА ===")
+    
+    val cache = InMemoryCache.create<String, Int> {
+        maxSize = 100
+        defaultTTL = java.time.Duration.ofSeconds(10)
+    }
+    
+    val threads = List(10) { threadId ->
+        Thread {
+            repeat(100) { i ->
+                val key = "key-${threadId}-$i"
+                cache.put(key, threadId * 100 + i)
+                
+                // Параллельные чтения и записи
+                if (i % 3 == 0) {
+                    cache.get(key)
+                }
+                
+                if (i % 5 == 0) {
+                    cache.containsKey(key)
+                }
+                
+                if (i % 7 == 0) {
+                    cache.remove(key)
+                }
+            }
+        }
+    }
+    
+    threads.forEach { it.start() }
+    threads.forEach { it.join() }
+    
+    println("✅ Все потоки завершились без ошибок")
+    println("Финальный размер кеша: ${cache.size()}")
+    
+    cache.shutdown()
+}
+```
+
+## 🎯 **ВАЖНЫЕ МОМЕНТЫ:**
+
+### 1. **Collections.synchronizedMap ≠ полная thread-safe**
+```kotlin
+// synchronizedMap защищает только отдельные операции:
+val map = Collections.synchronizedMap(LinkedHashMap<String, String>())
+
+map["key"] = "value" // ✅ Атомарно
+map.get("key")       // ✅ Атомарно  
+
+// НО составные операции не атомарны:
+if (map.containsKey("key")) {  // ❌ Не атомарно!
+    map.get("key")             // Между contains и get map может измениться
+}
+```
+
+### 2. **LinkedHashMap с accessOrder=true особенно уязвим**
+- При каждом `get()` меняется внутренняя структура
+- Без полной синхронизации - гарантированные ConcurrentModificationException
+
+### 3. **Atomic переменные для счётчиков**
+```kotlin
+private val hitCount = AtomicLong(0) // ✅ Не нуждается в synchronized
+// AtomicLong сам по себе thread-safe
+```
+
+## ✅ **ВЫВОД:**
+
+**Да, нужно добавить `synchronized(storage)` ко ВСЕМ методам, которые работают с storage!**
+
+Ты правильно заметил этот нюанс - это показывает твоё растущее понимание многопоточности! 🚀
+
+Теперь наш кеш действительно **полностью thread-safe**! 💪
+
+---
+
 

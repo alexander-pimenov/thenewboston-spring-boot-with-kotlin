@@ -1,13 +1,13 @@
-package tv.codealong.tutorials.various.yandex.task3_1
+package tv.codealong.tutorials.various.yandex.task3_2
 
 fun main() {
     println("=== 🧪 ТЕСТИРОВАНИЕ СИСТЕМЫ КЕШИРОВАНИЯ ===")
 
     // Создаём кеш с настройками
-    val cache = InMemoryCache.create<String, String> {
+    val cache = InMemoryCache2.create<String, String> {
         maxSize = 5  // Максимальный размер кеша, если будет больше этого числа, то будет удален тот что был добавлен первым
         defaultTTL = java.time.Duration.ofSeconds(10)
-        evictionPolicy = EvictionPolicy.LRU
+        evictionPolicy = EvictionPolicy2.LRU
         cleanupInterval = java.time.Duration.ofSeconds(5)
     }
 
