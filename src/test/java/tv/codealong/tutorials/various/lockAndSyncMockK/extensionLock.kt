@@ -1,4 +1,4 @@
-package tv.codealong.tutorials.various.syncMockK
+package tv.codealong.tutorials.various.lockAndSyncMockK
 
 import io.mockk.mockk
 import java.util.concurrent.locks.ReentrantLock
@@ -18,7 +18,7 @@ import java.util.concurrent.locks.ReentrantLock
  * - Нужен try-lock без блокировки
  * - Сложная логика с условными переменными
  */
-// Создаем удобные extension-функции
+// Создаем удобные extension-функции, который уже содержит try-finally
 fun <T> ReentrantLock.withLock(action: () -> T): T {
     lock()
     // Всегда используйте try-finally!
@@ -35,4 +35,8 @@ fun example() {
         val mock = mockk<MyService>()
         // работа с mock
     }
+}
+
+class MyService {
+
 }
