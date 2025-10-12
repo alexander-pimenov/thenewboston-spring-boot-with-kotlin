@@ -134,6 +134,7 @@ class LimitCheckingSystem {
 
     // Синхронизация по userId, т.к. платежи последовательные
     private val locks = mutableMapOf<String, Any>()
+
     private fun getLock(userId: String): Any {
         return locks.getOrPut(userId) { Any() }
     }
@@ -157,7 +158,7 @@ class LimitCheckingSystem {
      */
     fun processPayment(payment: Payment): LimitCheckResult {
 
-        // "Ведём клиента в его персональную комнату"
+        // "Ведём клиента в его персональную комнату" - синхронизация п определенному объекту клиента
         synchronized(getLock(payment.userId)) {
             // "В комнате есть только один клиент" - это гарантирует блокировка. Для информации выводим его идентификатор и объект блокировки
             println("--- [для информации: пользователь ${payment.userId} блокируемся на каком объекте: ${getLock(payment.userId)}] ---")
