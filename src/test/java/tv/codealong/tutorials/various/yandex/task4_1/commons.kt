@@ -430,6 +430,52 @@ class JwtTokenProvider(private val config: AuthConfig) : TokenProvider {
 }
 
 // 🚦 Rate Limiter
+/**
+ * ## 🎯 **ПОШАГОВЫЙ РАЗБОР ВЫПОЛНЕНИЯ:**
+ * Для лучшего понимания функции getOrPut
+ * ### Сценарий: **Первый вызов для нового пользователя**
+ * ```kotlin
+ * val limiter = SimpleRateLimiter()
+ *
+ * // Первый вызов для "user123":
+ * limiter.tryAcquire("user123")
+ *
+ * // Внутри getOrPut:
+ * // 1. attempts["user123"] = null (ключа нет)
+ * // 2. Выполняется lambda { mutableListOf() } → создаётся пустой список
+ * // 3. attempts["user123"] = mutableListOf() // добавляется в Map
+ * // 4. Возвращается новый пустой список
+ * ```
+ *
+ * ### Сценарий: **Повторный вызов для того же пользователя**
+ * ```kotlin
+ * // Второй вызов для "user123":
+ * limiter.tryAcquire("user123")
+ *
+ * // Внутри getOrPut:
+ * // 1. attempts["user123"] = [Instant1] (ключ уже есть)
+ * // 2. Lambda НЕ выполняется!
+ * // 3. Возвращается существующий список [Instant1]
+ * ```
+ *
+ * ## 📊 **ВИЗУАЛИЗАЦИЯ ПРОЦЕССА:**
+ *
+ * ```
+ * ПЕРВЫЙ ВЫЗОВ tryAcquire("user123"):
+ *
+ * attempts Map: {}
+ * ↓ getOrPut("user123") { mutableListOf() }
+ * attempts Map: {"user123" → []}
+ * Возвращает: []
+ *
+ * ПОВТОРНЫЙ ВЫЗОВ tryAcquire("user123"):
+ *
+ * attempts Map: {"user123" → [timestamp1]}
+ * ↓ getOrPut("user123") { mutableListOf() } // lambda НЕ выполняется!
+ * attempts Map: {"user123" → [timestamp1, timestamp2]}
+ * Возвращает: [timestamp1, timestamp2]
+ * ```
+ */
 interface RateLimiter {
     fun tryAcquire(key: String): Boolean
 }
@@ -442,8 +488,24 @@ class SimpleRateLimiter : RateLimiter {
         val windowStart = now.minusSeconds(60) // 1 minute window
 
         synchronized(attempts) {
+            // 🔍 Вот эта строка:
             val keyAttempts = attempts.getOrPut(key) { mutableListOf() }
+            // ↑ Гарантирует что для каждого ключа всегда есть список
+            // ↑ Не важно новый пользователь или существующий
 
+            // Что происходит:
+            // 1. Пытаемся получить список попыток для ключа (например, "login:alice@email.com")
+            // 2. Если такого ключа нет → создаём пустой mutableListOf() и добавляем в Map
+            // 3. Если ключ есть → просто возвращаем существующий список
+
+            // Эквивалент без getOrPut:
+            // var keyAttempts = attempts[key]
+            // if (keyAttempts == null) {
+            //     keyAttempts = mutableListOf()
+            //     attempts[key] = keyAttempts
+            // }
+
+            // Дальше можно безопасно работать с keyAttempts
             // Удаляем старые попытки
             keyAttempts.removeAll { it.isBefore(windowStart) }
 
