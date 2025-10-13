@@ -1,10 +1,10 @@
 package tv.codealong.tutorials.various.getOrPut
 
-import java.math.BigDecimal
-import kotlin.time.times
+import java.math.BigInteger
 
 /**
  * ## 🎯 **ЧТО ТАКОЕ `getOrPut`?**
+ * ### 🎯 Чёткая семантика "получить или создать" 🎯
  *
  * **`getOrPut` делает две вещи одновременно:**
  * 1. **Пытается получить** значение по ключу из Map
@@ -37,8 +37,8 @@ fun main() {
     println(calc.factorial(6)) // 720 (вычисляет только 6 * 120)
     println(calc.factorial(7)) // 5040 (вычисляет только 7 * 720)
 
-    val lonCalc = CalculatorBigDecimal()
-    println(lonCalc.factorial(100))
+    val lonCalc = CalculatorBigInteger()
+    println(lonCalc.factorial(20))
 
     val people = listOf(
         Person("Alice", "Moscow"),
@@ -53,11 +53,13 @@ fun main() {
 
     val config = mutableMapOf<String, Int>()
     val timeout = config.getOrPut("timeout") { 30 } // Int
-    println(config)
+    println(timeout) // 30
+    println(config) // {timeout=30}
 
     val settings = mutableMapOf<String, Boolean>()
     val debug = settings.getOrPut("debug") { false } // Boolean
-    println(settings)
+    println(debug) // false
+    println(settings) // {debug=false}
 }
 
 /**
@@ -94,12 +96,12 @@ class Calculator {
     }
 }
 
-class CalculatorBigDecimal {
-    private val cache = mutableMapOf<Int, BigDecimal>()
+class CalculatorBigInteger {
+    private val cache = mutableMapOf<Int, BigInteger>()
 
-    fun factorial(n: Int): BigDecimal {
+    fun factorial(n: Int): BigInteger {
         return cache.getOrPut(n) {
-            if (n <= 1) BigDecimal(1) else BigDecimal(n) * factorial(n - 1)
+            if (n <= 1) BigInteger.ONE else BigInteger.valueOf(n.toLong()) * factorial(n - 1)
         }
     }
 }

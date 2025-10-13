@@ -2,9 +2,6 @@ package tv.codealong.tutorials.various.fibonaccifactorial
 
 import java.math.BigInteger
 
-class FFExample {
-}
-
 /**
  * Преимущества итеративного подхода:
  * Временная сложность: O(n) - линейная
