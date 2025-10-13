@@ -487,7 +487,14 @@ class SimpleRateLimiter : RateLimiter {
         val now = Instant.now()
         val windowStart = now.minusSeconds(60) // 1 minute window
 
+        //🎯 ПОЧЕМУ МЫ ВЫБРАЛИ synchronized(attempts):
+        // - Простота - легко понять что защищаем
+        // - Ясность - видна связь между защищаемым ресурсом и синхронизацией
+        // - ✅ ХОРОШО: synchronized на том, что защищаем
+        // - Достаточность - защищает именно то, что нужно
+        //- Идиоматичность - распространённый паттерн в Java/Kotlin
         synchronized(attempts) {
+            // В этом блоке только ОДИН поток может работать с attempts
             // 🔍 Вот эта строка:
             val keyAttempts = attempts.getOrPut(key) { mutableListOf() }
             // ↑ Гарантирует что для каждого ключа всегда есть список
@@ -517,6 +524,7 @@ class SimpleRateLimiter : RateLimiter {
             keyAttempts.add(now)
             return true
         }
+        // 🔓 Монитор автоматически освобождается при выходе из блока
     }
 }
 

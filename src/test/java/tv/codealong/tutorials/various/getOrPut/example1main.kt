@@ -60,6 +60,14 @@ fun main() {
     val debug = settings.getOrPut("debug") { false } // Boolean
     println(debug) // false
     println(settings) // {debug=false}
+
+
+    val settings2 = mutableMapOf<String, MutableList<Boolean>>()
+    val debug2 = settings2.getOrPut("debug") { mutableListOf(false) } // [false]
+    println(debug2) // [false]
+    println(settings2) // {debug=[false]}
+
+
 }
 
 /**
