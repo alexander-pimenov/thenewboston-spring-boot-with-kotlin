@@ -1,5 +1,8 @@
 package tv.codealong.tutorials.various.getOrPut
 
+import java.math.BigDecimal
+import kotlin.time.times
+
 /**
  * ## 🎯 **ЧТО ТАКОЕ `getOrPut`?**
  *
@@ -33,6 +36,9 @@ fun main() {
     println(calc.factorial(5)) // 120 (берёт из кеша)
     println(calc.factorial(6)) // 720 (вычисляет только 6 * 120)
     println(calc.factorial(7)) // 5040 (вычисляет только 7 * 720)
+
+    val lonCalc = CalculatorBigDecimal()
+    println(lonCalc.factorial(100))
 
     val people = listOf(
         Person("Alice", "Moscow"),
@@ -84,6 +90,16 @@ class Calculator {
     fun factorial(n: Int): Long {
         return cache.getOrPut(n) {
             if (n <= 1) 1L else n * factorial(n - 1)
+        }
+    }
+}
+
+class CalculatorBigDecimal {
+    private val cache = mutableMapOf<Int, BigDecimal>()
+
+    fun factorial(n: Int): BigDecimal {
+        return cache.getOrPut(n) {
+            if (n <= 1) BigDecimal(1) else BigDecimal(n) * factorial(n - 1)
         }
     }
 }
