@@ -64,9 +64,11 @@ class FileEncryptor {
 fun main() {
     val encryptor = FileEncryptor()
 
+    //вычитать файл из resources: src/main/resources/вашфайл.txt
+
     // Шифрование
-    encryptor.encryptFile("secrets.txt", "secrets.enc", "мой_сложный_пароль")
+    encryptor.encryptFile("src/main/resources/вашфайл.txt", "src/main/resources/вашфайл.enc", "ваш_сложный_пароль")
 
     // Дешифрование
-    encryptor.decryptFile("secrets.enc", "secrets_decrypted.txt", "мой_сложный_пароль")
+    encryptor.decryptFile("src/main/resources/вашфайл.enc", "src/main/resources/вашфайл.txt", "ваш_сложный_пароль")
 }
