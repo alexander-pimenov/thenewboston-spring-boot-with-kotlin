@@ -113,7 +113,6 @@ dependencies {
 //    testImplementation("javax.servlet:javax.servlet-api:4.0.1")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
 //    testImplementation("com.github.tomakehurst:wiremock-jre8:2.35.0")
-    testImplementation("io.ktor:ktor-client-core:2.3.4")
     testImplementation("io.ktor:ktor-client-cio:2.3.4")
     testImplementation("io.ktor:ktor-client-content-negotiation:2.3.4")
     testImplementation("io.ktor:ktor-serialization-kotlinx-json:2.3.4")
@@ -129,6 +128,8 @@ dependencies {
 //    testImplementation("org.springframework.security:spring-security-test")
     // https://mvnrepository.com/artifact/org.mockito.kotlin/mockito-kotlin
     testImplementation("org.mockito.kotlin:mockito-kotlin:6.0.0")
+    // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-test
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
 
 
     //implementation(kotlin("stdlib-jdk8"))
