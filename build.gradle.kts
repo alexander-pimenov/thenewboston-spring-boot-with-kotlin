@@ -94,6 +94,7 @@ dependencies {
     runtimeOnly("org.jetbrains.kotlin:kotlin-bom")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-slf4j")
 
     compileOnly("org.projectlombok:lombok")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
@@ -126,6 +127,8 @@ dependencies {
     // https://mvnrepository.com/artifact/org.junit.platform/junit-platform-engine
     testImplementation("org.junit.platform:junit-platform-engine")
 //    testImplementation("org.springframework.security:spring-security-test")
+    // https://mvnrepository.com/artifact/org.mockito.kotlin/mockito-kotlin
+    testImplementation("org.mockito.kotlin:mockito-kotlin:6.0.0")
 
 
     //implementation(kotlin("stdlib-jdk8"))

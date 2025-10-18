@@ -29,6 +29,9 @@ class HttpSenderStub(
 
     private val log = LoggerFactory.getLogger(HttpSenderStub::class.java)
     private val objectMapper = ObjectMapper().registerModule(JavaTimeModule())
+    override fun sendMeta() {
+        TODO("Not yet implemented")
+    }
 
     override fun send(event: IProcessedInvocation) {
         try {
@@ -58,6 +61,10 @@ class HttpSenderStub(
             monitoringService.messageLost()
             throw ex
         }
+    }
+
+    override fun sendEvent(auditEventMessage: AuditEventMessage) {
+        TODO("Not yet implemented")
     }
 
     private fun resolveRoute(event: IProcessedInvocation): HttpRoute? {

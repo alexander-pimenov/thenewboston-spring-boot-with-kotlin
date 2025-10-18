@@ -51,6 +51,9 @@ class KafkaSender(
     }
 
     private val log = LoggerFactory.getLogger(KafkaSender::class.java)
+    override fun sendMeta() {
+        TODO("Not yet implemented")
+    }
 
     override fun send(event: IProcessedInvocation) {
         try {
@@ -77,6 +80,10 @@ class KafkaSender(
             //monitoringService.trackError(ex.message ?: "Unknown error")
             throw ex
         }
+    }
+
+    override fun sendEvent(auditEventMessage: AuditEventMessage) {
+        TODO("Not yet implemented")
     }
 
     private fun resolveRoute(event: IProcessedInvocation): TransportRouteConfig? {
