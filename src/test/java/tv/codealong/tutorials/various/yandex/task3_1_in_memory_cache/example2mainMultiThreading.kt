@@ -1,4 +1,4 @@
-package tv.codealong.tutorials.various.yandex.task3_1
+package tv.codealong.tutorials.various.yandex.task3_1_in_memory_cache
 
 fun main() {
     testConcurrentAccess()

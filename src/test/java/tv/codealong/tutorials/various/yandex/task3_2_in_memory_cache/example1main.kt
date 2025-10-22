@@ -1,4 +1,4 @@
-package tv.codealong.tutorials.various.yandex.task3_2
+package tv.codealong.tutorials.various.yandex.task3_2_in_memory_cache
 
 fun main() {
     println("=== 🧪 ТЕСТИРОВАНИЕ СИСТЕМЫ КЕШИРОВАНИЯ ===")

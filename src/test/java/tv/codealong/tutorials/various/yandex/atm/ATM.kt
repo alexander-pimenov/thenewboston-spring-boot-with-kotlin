@@ -1,4 +1,4 @@
-package tv.codealong.tutorials.various.atm
+package tv.codealong.tutorials.various.yandex.atm
 
 import java.util.*
 

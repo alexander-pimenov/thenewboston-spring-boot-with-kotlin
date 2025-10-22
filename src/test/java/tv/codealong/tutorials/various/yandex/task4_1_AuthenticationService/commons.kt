@@ -1,11 +1,9 @@
-package tv.codealong.tutorials.various.yandex.task4_1
+package tv.codealong.tutorials.various.yandex.task4_1_AuthenticationService
 
 import java.security.SecureRandom
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 
 /**

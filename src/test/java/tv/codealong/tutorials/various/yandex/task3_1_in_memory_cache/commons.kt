@@ -1,8 +1,7 @@
-package tv.codealong.tutorials.various.yandex.task3_2
+package tv.codealong.tutorials.various.yandex.task3_1_in_memory_cache
 
 import java.time.Instant
 import java.util.*
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
@@ -13,64 +12,72 @@ import java.util.concurrent.atomic.AtomicLong
  * 🔍 ШАГ 1: Декомпозиция задачи
  * Давай разобьём на подзадачи:
  *
- * kotlin
- * // 1. 📦 Хранение данных: как хранить пары ключ-значение + TTL?
- * // 2. ⏰ Управление временем жизни: как отслеживать и удалять просроченное?
- * // 3. 🔒 Безопасность: как сделать thread-safe?
- * // 4. 📊 Метрики: как считать hit/miss?
- * // 5. 🗑️ Вытеснение: что делать при переполнении?
- * // 6. ⚙️ Конфигурация: настройки TTL, размера, стратегий
+ *  1. 📦 Хранение данных: как хранить пары ключ-значение + TTL?
+ *  2. ⏰ Управление временем жизни: как отслеживать и удалять просроченное?
+ *  3. 🔒 Безопасность: как сделать thread-safe?
+ *  4. 📊 Метрики: как считать hit/miss?
+ *  5. 🗑️ Вытеснение: что делать при переполнении?
+ *  6. ⚙️ Конфигурация: настройки TTL, размера, стратегий
+ *
  * 🏗️ ШАГ 2: Определение сущностей
  * Вопрос 1: "Что представляет собой запись в кеше?"
- * kotlin
- * // Запись должна хранить:
- * // - Значение (любого типа)
- * // - Время создания (для TTL)
- * // - Время последнего доступа (для LRU)
- * // - Размер данных (для ограничения памяти)
  *
- * // ✅ Решение: data class для записи
+ *  Запись должна хранить:
+ *  - Значение (любого типа)
+ *  - Время создания (для TTL)
+ *  - Время последнего доступа (для LRU)
+ *  - Размер данных (для ограничения памяти)
+ *
+ *  ✅ Решение: data class для записи
+ * ```kotlin
  * data class CacheEntry<V>(
  *     val value: V,
  *     val createdAt: Instant = Instant.now(),
  *     var lastAccessed: Instant = Instant.now(),
  *     val size: Long = 1 // упрощённо, в реальности можно считать байты
  * )
+ * ```
+ *
  * Вопрос 2: "Как управлять TTL?"
- * kotlin
- * // Нужно периодически проверять и удалять просроченные записи
- * // → Отдельный механизм cleanup'а
  *
- * // ✅ Решение: Scheduled executor для фоновой очистки
+ * // Нужно периодически проверять и удалять просроченные записи → Отдельный механизм cleanup'а
+ *
+ *  ✅ Решение: Scheduled executor для фоновой очистки
+ *  ```kotlin
  * private val cleanupExecutor = Executors.newScheduledThreadPool(1)
+ * ```
  * Вопрос 3: "Как считать метрики thread-safe?"
- * kotlin
- * // Множество потоков будет обновлять счётчики
- * // → Атомарные счётчики
  *
- * // ✅ Решение: AtomicLong для метрик
+ * // Множество потоков будет обновлять счётчики → Атомарные счётчики
+ *
+ *  ✅ Решение: AtomicLong для метрик
+ * ```kotlin
  * private val hitCount = AtomicLong(0)
  * private val missCount = AtomicLong(0)
+ * ```
  * 🎯 ШАГ 3: Выбор структур данных
+ *
  * Вопрос 4: "Как хранить данные для быстрого доступа?"
- * kotlin
- * // Нужен быстрый поиск по ключу → HashMap
- * // Но обычный HashMap не thread-safe → ConcurrentHashMap
  *
- * // ✅ Решение:
+ * // Нужен быстрый поиск по ключу → HashMap. Но обычный HashMap не thread-safe → ConcurrentHashMap
+ *
+ *  ✅ Решение:
+ * ```kotlin
  * private val storage = ConcurrentHashMap<K, CacheEntry<V>>()
+ * ```
  * Вопрос 5: "Как реализовать LRU (Least Recently Used)?"
- * kotlin
- * // LRU требует знать порядок доступа к элементам
- * // → LinkedHashMap или собственная реализация с doubly-linked list
  *
- * // ✅ Решение: используем LinkedHashMap с accessOrder = true
+ * // LRU требует знать порядок доступа к элементам → LinkedHashMap с accessOrder=true или собственная реализация с doubly-linked list
+ *
+ *  ✅ Решение: используем LinkedHashMap с accessOrder = true
+ *  ```kotlin
  * private val accessOrderMap = Collections.synchronizedMap(
  *     LinkedHashMap<K, CacheEntry<V>>(16, 0.75f, true) // true = access ordering
  * )
+ * ```
  */
 // 🎯 1. Сначала определим перечисления для политик в отношении вытеснения и конфигурацию
-enum class EvictionPolicy2 {
+enum class EvictionPolicy {
     LRU,    // Least Recently Used - вытесняем давно неиспользуемые
     FIFO,   // First In First Out - вытесняем самые старые
     TTL     // Time To Live - вытесняем по истечении времени
@@ -102,34 +109,34 @@ enum class EvictionPolicy2 {
  * - ❌ TTL НЕ должен вытеснять записи только потому что достигнут maxSize
  *
  */
-class CacheConfig2 private constructor(
+class CacheConfig private constructor(
     val maxSize: Int,
     val defaultTTL: java.time.Duration,
-    val evictionPolicy: EvictionPolicy2,
+    val evictionPolicy: EvictionPolicy,
     val cleanupInterval: java.time.Duration,
 ) {
     // Builder класс
     // Обязательно поставить дефолтные значения
-    class Builder2 {
+    class Builder {
         var maxSize: Int = 1000
         var defaultTTL: java.time.Duration = java.time.Duration.ofMinutes(30)
-        var evictionPolicy: EvictionPolicy2 = EvictionPolicy2.LRU
+        var evictionPolicy: EvictionPolicy = EvictionPolicy.LRU
         var cleanupInterval: java.time.Duration = java.time.Duration.ofSeconds(30)
 
-        fun build(): CacheConfig2 {
-            return CacheConfig2(maxSize, defaultTTL, evictionPolicy, cleanupInterval)
+        fun build(): CacheConfig {
+            return CacheConfig(maxSize, defaultTTL, evictionPolicy, cleanupInterval)
         }
     }
 
     companion object {
-        fun build(block: Builder2.() -> Unit = {}): CacheConfig2 {
-            return Builder2().apply(block).build()
+        fun build(block: Builder.() -> Unit = {}): CacheConfig {
+            return Builder().apply(block).build()
         }
     }
 }
 
 // 📦 2. Запись в кеше
-data class CacheEntry2<V>(
+data class CacheEntry<V>(
     val value: V,
     val createdAt: Instant = Instant.now(),
     var lastAccessed: Instant = Instant.now(),
@@ -147,7 +154,7 @@ data class CacheEntry2<V>(
 }
 
 // 📊 3. Метрики кеша
-data class CacheMetrics2(
+data class CacheMetrics(
     val hitCount: Long,
     val missCount: Long,
     val evictionCount: Long,
@@ -164,28 +171,65 @@ data class CacheMetrics2(
     val usagePercentage: Double get() = (currentSize.toDouble() / maxSize.toDouble()) * 100
 }
 
-// 🎯 4. ОСНОВНОЙ КЛАСС КЕША.
-// Синхронизировать оба хранилища storage и accessOrderMap (сложнее).
-// Лучше использовать пример: @see tv.codealong.tutorials.various.yandex.task3_1.InMemoryCache
-class InMemoryCache2<K, V> private constructor(
-    private val config: CacheConfig2,
+// 🎯 4. ОСНОВНОЙ КЛАСС КЕША
+/**
+ * 🎯 ВАЖНЫЕ МОМЕНТЫ:
+ * 1. Collections.synchronizedMap ≠ полная thread-safe
+ * kotlin
+ * // synchronizedMap защищает только отдельные операции:
+ * val map = Collections.synchronizedMap(LinkedHashMap<String, String>())
+ *
+ * map["key"] = "value" // ✅ Атомарно
+ * map.get("key")       // ✅ Атомарно
+ *
+ * // НО составные операции не атомарны:
+ * if (map.containsKey("key")) {  // ❌ Не атомарно!
+ *     map.get("key")             // Между contains и get map может измениться
+ * }
+ * 2. LinkedHashMap с accessOrder=true особенно уязвим
+ * При каждом get() меняется внутренняя структура
+ *
+ * Без полной синхронизации - гарантированные ConcurrentModificationException
+ *
+ * 3. Atomic переменные для счётчиков
+ * kotlin
+ * private val hitCount = AtomicLong(0) // ✅ Не нуждается в synchronized
+ * // AtomicLong сам по себе thread-safe
+ */
+class InMemoryCache<K, V> private constructor(
+    private val config: CacheConfig,
 ) {
     // 📦 Основное Хранилище данных
-    private val storage = ConcurrentHashMap<K, CacheEntry2<V>>()
+    // Убираем ConcurrentHashMap - всё в одном месте!
+    //private val storage = ConcurrentHashMap<K, CacheEntry<V>>()
 
-    // ✅ ЕДИНСТВЕННОЕ хранилище - LinkedHashMap с LRU в пример: @see tv.codealong.tutorials.various.yandex.task3_1.InMemoryCache
-    // это лучшая стратегия, т.к. с LinkedHashMap работает LRU из коробки.
-//    private val storage = Collections.synchronizedMap(
-//        object : LinkedHashMap<K, CacheEntry<V>>(16, 0.75f, true) {
-//            override fun removeEldestEntry(eldest: Map.Entry<K, CacheEntry<V>>): Boolean {
-//                val shouldRemove = size > config.maxSize
-//                if (shouldRemove && eldest != null) {
-//                    println("🗑️ LRU вытеснение: ${eldest.key}")
-//                }
-//                return shouldRemove
-//            }
-//        }
-//    )
+    // ✅ ЕДИНСТВЕННОЕ 📦 Основное Хранилище данных - LinkedHashMap с LRU
+    //LinkedHashMap с accessOrder = true + removeEldestEntry даёт нам готовую LRU реализацию "из коробки"!
+    private val storage = Collections.synchronizedMap(
+        object : LinkedHashMap<K, CacheEntry<V>>(16, 0.75f, true) {
+            override fun removeEldestEntry(eldest: Map.Entry<K, CacheEntry<V>>): Boolean {
+                return when (config.evictionPolicy) {
+                    EvictionPolicy.LRU -> {
+                        val shouldRemove = size > config.maxSize
+                        if (shouldRemove && eldest != null) {
+                            println("🗑️ LRU вытеснение: ${eldest.key}")
+                        }
+                        shouldRemove
+                    }
+
+                    EvictionPolicy.FIFO -> {
+                        val shouldRemove = size > config.maxSize
+                        if (shouldRemove && eldest != null) {
+                            println("🗑️ LRU вытеснение: ${eldest.key}")
+                        }
+                        shouldRemove
+                    }
+
+                    EvictionPolicy.TTL -> false // TTL не вытесняет по размеру
+                }
+            }
+        }
+    )
 
     // 📊 Метрики
     private val hitCount = AtomicLong(0)
@@ -197,6 +241,9 @@ class InMemoryCache2<K, V> private constructor(
 
 
     /**
+     * Это описание оставляю для примера, в этой реализации используется одно хранилище и
+     * свойства LinkedHashMap с accessOrder в storage.
+     *
      * 🔄 Для LRU - отслеживаем порядок доступа (LRU tracking)
      * Цель: Отслеживать порядок доступа к элементам, чтобы знать какой элемент давно не использовался (Least Recently Used)
      * LinkedHashMap с accessOrder = true + removeEldestEntry даёт нам готовую LRU реализацию "из коробки"!
@@ -248,16 +295,10 @@ class InMemoryCache2<K, V> private constructor(
      *
      */
     private val accessOrderMap = Collections.synchronizedMap(
-        object : LinkedHashMap<K, CacheEntry2<V>>(16, 0.75f, true) {
-            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<K, CacheEntry2<V>>?): Boolean {
+        object : LinkedHashMap<K, CacheEntry<V>>(16, 0.75f, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<K, CacheEntry<V>>?): Boolean {
                 // Автоматически удаляем самый старый элемент при превышении размера
-                if (size > config.maxSize && eldest != null) {
-                    // ✅ СИНХРОНИЗИРУЕМ: удаляем из ОБОИХ хранилищ
-                    storage.remove(eldest.key)
-                    println("🗑️ Вытеснено: ${eldest.key}")
-                    return true
-                }
-                return false
+                return size > config.maxSize
             }
         }
     )
@@ -275,95 +316,93 @@ class InMemoryCache2<K, V> private constructor(
     // 🎯 ОСНОВНЫЕ ОПЕРАЦИИ: PUT и GET
     /**
      * ✅ PUT - добавляет запись в кеш или обновляет существующую
+     * МОДИФИЦИРУЮТ состояние - нужен synchronized
+     *
      * @param key - ключ записи
      * @param ttl - индивидуальный TTL для записи, если null - используется default
      * @return предыдущее значение, если оно было
      */
     fun put(key: K, value: V, ttl: java.time.Duration? = null): V? {
-        val previousValue = storage[key]?.value
+        synchronized(storage) {
+            val previousEntry = storage[key]
 
-        val entry = CacheEntry2(
-            value = value,
-            ttl = ttl,
-            size = calculateSize(value) // В реальности здесь был бы расчёт размера
-        )
+            val entry = CacheEntry(
+                value = value,
+                ttl = ttl,
+                size = calculateSize(value) // В реальности здесь был бы расчёт размера
+            )
 
-        // ✅ СИНХРОНИЗИРУЕМ: добавляем в ОБА хранилища
-        storage[key] = entry
-        accessOrderMap[key] = entry // ⚠️ Может вызвать removeEldestEntry и удалить из storage!
+            storage[key] = entry // ✅ LinkedHashMap сам вытеснит старые элементы если нужно
 
-
-//        // Для LRU обновляем порядок доступа
-//        if (config.evictionPolicy == EvictionPolicy.LRU) {
-//            synchronized(accessOrderMap) {
-//                accessOrderMap[key] = entry
-//                // ⚠️ removeEldestEntry может автоматически удалить самый старый элемент!
-//            }
-//        }
-//
-//        // Проверяем не превысили ли лимит (только для LRU и FIFO)
-//        if (storage.size > config.maxSize &&
-//            config.evictionPolicy in setOf(EvictionPolicy.LRU, EvictionPolicy.FIFO)
-//        ) {
-//            evictOneEntry()
-//        }
-
-        return previousValue
+            return previousEntry?.value
+        }
     }
 
     /**
      * ✅ GET - возвращает запись из кеша или null
+     * МОДИФИЦИРУЮТ состояние в LinkedHashMap с accessOrder = true - нужен synchronized
      */
     fun get(key: K): V? {
-        //Взяли из хранилища
-        val entry = storage[key] ?: return null
-        if (!entry.isExpired(config.defaultTTL)) {
-            // ✅ СИНХРОНИЗИРУЕМ: обновляем порядок в ОБОИХ хранилищах
-            entry.markAccessed()
-            accessOrderMap[key] = entry // Обновляет порядок в LinkedHashMap
-            hitCount.incrementAndGet()
-            return entry.value
-        } else {
-            storage.remove(key)
-            accessOrderMap.remove(key)
-            missCount.incrementAndGet()
-            return null
+        synchronized(storage) {  // ✅ НУЖЕН - может изменить порядок в LinkedHashMap
+            //Взяли из хранилища
+            val entry = storage[key]
+            if (entry != null && !entry.isExpired(config.defaultTTL)) {
+                // ✅ LinkedHashMap САМ обновит порядок благодаря accessOrder=true
+                // Порядок автоматически обновляется благодаря accessOrder=true
+                // Даже get может изменить внутреннее состояние LinkedHashMap!
+                // (благодаря accessOrder=true)
+                entry.markAccessed()
+                hitCount.incrementAndGet()
+                return entry.value
+            } else {
+                if (entry != null) {
+                    storage.remove(key) // Удаляем просроченное
+                }
+                missCount.incrementAndGet()
+                return null
+            }
         }
     }
 
+    // МОДИФИЦИРУЮТ состояние - нужен synchronized
     fun remove(key: K): V? {
-        val removed = storage.remove(key)
-        synchronized(accessOrderMap) { accessOrderMap.remove(key) }
-        return removed?.value
+        synchronized(storage) {
+            val removed = storage.remove(key)
+            return removed?.value
+        }
     }
 
+    // МОДИФИЦИРУЮТ состояние - нужен synchronized
     fun clear() {
-        storage.clear()
-        synchronized(accessOrderMap) { accessOrderMap.clear() }
-        hitCount.set(0)
-        missCount.set(0)
-        evictionCount.set(0)
+        synchronized(storage) {
+            storage.clear()
+            hitCount.set(0)
+            missCount.set(0)
+            evictionCount.set(0)
+        }
     }
 
     // 📊 МЕТРИКИ
 
-    fun getMetrics(): CacheMetrics2 {
-        return CacheMetrics2(
-            hitCount = hitCount.get(),
-            missCount = missCount.get(),
-            evictionCount = evictionCount.get(),
-            currentSize = storage.size,
-            maxSize = config.maxSize
-        )
+    fun getMetrics(): CacheMetrics {
+        synchronized(storage) {
+            return CacheMetrics(
+                hitCount = hitCount.get(),
+                missCount = missCount.get(),
+                evictionCount = evictionCount.get(),
+                currentSize = storage.size,
+                maxSize = config.maxSize
+            )
+        }
     }
 
     // 🗑️ ВЫТЕСНЕНИЕ
     //TTL политика не должна вытеснять записи по достижению maxSize! TTL только удаляет просроченные записи.
     private fun evictOneEntry() {
         when (config.evictionPolicy) {
-            EvictionPolicy2.LRU -> evictLRU()
-            EvictionPolicy2.FIFO -> evictFIFO()
-            EvictionPolicy2.TTL -> {
+            EvictionPolicy.LRU -> evictLRU()
+            EvictionPolicy.FIFO -> evictFIFO()
+            EvictionPolicy.TTL -> {
                 // ❌ TTL НЕ вытесняет по размеру!
                 // Просто не делаем ничего, ждём cleanup для просроченных записей
                 return
@@ -393,23 +432,24 @@ class InMemoryCache2<K, V> private constructor(
     }
 
     // ⏰ ОЧИСТКА ПРОСРОЧЕННЫХ ЗАПИСЕЙ
-
+    // МОДИФИЦИРУЮТ состояние - нужен synchronized
     private fun cleanupExpiredEntries() {
-        val iterator = storage.entries.iterator()
-        var cleanedCount = 0
+        synchronized(storage) {
+            val iterator = storage.entries.iterator()
+            var cleanedCount = 0
 
-        while (iterator.hasNext()) {
-            val (key, entry) = iterator.next()
-            if (entry.isExpired(config.defaultTTL)) {
-                iterator.remove()
-                synchronized(accessOrderMap) { accessOrderMap.remove(key) }
-                cleanedCount++
-                evictionCount.incrementAndGet()
+            while (iterator.hasNext()) {
+                val (key, entry) = iterator.next()
+                if (entry.isExpired(config.defaultTTL)) {
+                    iterator.remove()
+                    cleanedCount++
+                    evictionCount.incrementAndGet()
+                }
             }
-        }
 
-        if (cleanedCount > 0) {
-            println("🔄 Очищено $cleanedCount просроченных записей")
+            if (cleanedCount > 0) {
+                println("🔄 Очищено $cleanedCount просроченных записей")
+            }
         }
     }
 
@@ -421,10 +461,23 @@ class InMemoryCache2<K, V> private constructor(
         return 1
     }
 
-    fun size(): Int = storage.size
+    fun size(): Int {
+        synchronized(storage) {  // ✅ НУЖЕН - читает размер во время модификации
+            return storage.size
+        }
+    }
 
+    // МОДИФИЦИРУЮТ состояние - нужен synchronized, т.к. вызывает get внутри
     fun containsKey(key: K): Boolean {
-        return get(key) != null // Используем get для проверки TTL
+        synchronized(storage) {  // ✅ НУЖЕН - вызывает get внутри
+            return get(key) != null // Используем get для проверки TTL
+        }
+    }
+
+    fun isEmpty(): Boolean {
+        synchronized(storage) {
+            return storage.isEmpty()
+        }
     }
 
     //напечатать состав кеша
@@ -457,9 +510,9 @@ class InMemoryCache2<K, V> private constructor(
 //        }
 
         // 🚀 СТАТИЧЕСКИЙ ФАБРИЧНЫЙ МЕТОД - это при использовании Билдера:
-        fun <K, V> create(block: CacheConfig2.Builder2.() -> Unit = {}): InMemoryCache2<K, V> {
-            val config = CacheConfig2.build(block)
-            return InMemoryCache2(config)
+        fun <K, V> create(block: CacheConfig.Builder.() -> Unit = {}): InMemoryCache<K, V> {
+            val config = CacheConfig.build(block)
+            return InMemoryCache(config)
         }
     }
 }

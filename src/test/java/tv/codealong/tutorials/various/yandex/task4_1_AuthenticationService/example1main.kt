@@ -1,4 +1,4 @@
-package tv.codealong.tutorials.various.yandex.task4_1
+package tv.codealong.tutorials.various.yandex.task4_1_AuthenticationService
 
 // 🚀 ЗАПУСКАЕМ ТЕСТЫ
 
