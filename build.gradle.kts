@@ -73,7 +73,10 @@ dependencies {
 
     //feign
     implementation("io.github.openfeign:feign-core:13.5")
-    implementation("io.github.microutils:koltin-logging-jvm:3.0.5")
+
+    // https://mvnrepository.com/artifact/io.github.oshai/kotlin-logging-jvm
+//    implementation("io.github.microutils:koltin-logging-jvm:3.0.5") - не работает
+    runtimeOnly("io.github.oshai:kotlin-logging-jvm:7.0.7")
 
     // Для распознавания текста из картинок
     implementation("net.sourceforge.tess4j:tess4j:5.8.0")

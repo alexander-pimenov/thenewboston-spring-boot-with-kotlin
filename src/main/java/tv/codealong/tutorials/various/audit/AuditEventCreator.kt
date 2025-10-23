@@ -7,5 +7,5 @@ import tv.codealong.tutorials.various.countDownLatch.AuditIntegration
  */
 fun createEvent(
     integrationName: AuditIntegration,
-    lambda: () -> List<RiskAuditEvent.RiskAuditEventParams>
-) = AuditEventMessage()
+    lambda: () -> List<RiskAuditEvent.RiskAuditEventParams>,
+) = AuditEventMessage(event = RiskAuditEvent(""))

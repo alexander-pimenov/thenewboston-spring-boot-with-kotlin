@@ -114,10 +114,12 @@ class FileCryptoCLI {
             Примеры:
               Шифрование:
                 java -jar crypto.jar encrypt secrets.txt secrets.enc mypassword
+                или
                 java -jar crypto.jar encrypt "Интересные ссылки.txt" links.enc
                 
               Дешифрование:
                 java -jar crypto.jar decrypt secrets.enc secrets_decrypted.txt mypassword
+                или
                 java -jar crypto.jar decrypt links.enc "Расшифрованные ссылки.txt"
             
             Если пароль не указан, будет запрошен при запуске.
