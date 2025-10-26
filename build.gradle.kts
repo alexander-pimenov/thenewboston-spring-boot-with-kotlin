@@ -71,6 +71,8 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310") //LocalDatetime
     implementation("com.fasterxml.jackson.core:jackson-annotations")
 
+    //Gson
+    implementation("com.google.code.gson:gson:2.11.0")
     //feign
     implementation("io.github.openfeign:feign-core:13.5")
 
@@ -125,14 +127,10 @@ dependencies {
     testImplementation("com.ninja-squad:springmockk:${springmockkVersion}")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 //    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    // https://mvnrepository.com/artifact/org.junit.platform/junit-platform-launcher
     testImplementation("org.junit.platform:junit-platform-launcher")
-    // https://mvnrepository.com/artifact/org.junit.platform/junit-platform-engine
     testImplementation("org.junit.platform:junit-platform-engine")
 //    testImplementation("org.springframework.security:spring-security-test")
-    // https://mvnrepository.com/artifact/org.mockito.kotlin/mockito-kotlin
-    testImplementation("org.mockito.kotlin:mockito-kotlin:6.0.0")
-    // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-test
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
 
 

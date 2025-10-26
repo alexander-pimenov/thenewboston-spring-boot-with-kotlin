@@ -18,7 +18,8 @@ import org.mockito.kotlin.verify
 import org.springframework.http.ResponseEntity
 import tv.codealong.tutorials.various.audit.AuditEventMessage
 import tv.codealong.tutorials.various.audit.AuditSender
-import java.time.LocalDateTime
+import tv.codealong.tutorials.various.countDownLatch.AuditProvider.Companion.runAuditable
+import java.time.OffsetDateTime
 import java.util.*
 
 class WaitingSendEventTest {
@@ -86,16 +87,17 @@ class WaitingSendEventTest {
     @Test
     fun `when invoke event dictionary should invoke saver`() {
         /* Given */
-        val sender = initAuditSaver()
-        val uuid = UUID.randomUUID().toString()
-        val now = LocalDateTime.now()
+        val latch = CountDownLatch(1)
+        val sender = initAuditSaver(latch)
+        val uuid = UUID.randomUUID()
+        val now = OffsetDateTime.now()
         val response = ResponseEntity.ok(
-            Dictionary(
+            tv.codealong.tutorials.various.model.Dictionary(
                 id = uuid,
                 code = "123",
                 tenantId = uuid,
                 rowSchema = {},
-                constraints = Constraint(listOf("name")),
+                constraints = tv.codealong.tutorials.various.model.Constraint(listOf("name")),
                 updatedAt = now
             )
         )
@@ -109,6 +111,7 @@ class WaitingSendEventTest {
         }
 
         /* Then */
+        waitingSendEvent(latch)
         verify(sender).sendEvent(any<AuditEventMessage>())
     }
 
@@ -121,10 +124,12 @@ class WaitingSendEventTest {
         Assertions.assertTrue(eventCalled, "sendEvent не был вызван за 30 секунд")
     }
 
-    fun initAuditSaver(): AuditSender {
+    fun initAuditSaver(latch: CountDownLatch): AuditSender {
         val sender = mock<AuditSender> {
-            on { sendEvent(any<AuditEventMessage>()) } doAnswer {}
             on { sendMeta() } doAnswer {}
+            on { sendEvent(any<AuditEventMessage>()) } doAnswer {
+                latch.countDown()
+            }
         }
         AuditSaverSupport(
             validatorHelper = validatorHelper,

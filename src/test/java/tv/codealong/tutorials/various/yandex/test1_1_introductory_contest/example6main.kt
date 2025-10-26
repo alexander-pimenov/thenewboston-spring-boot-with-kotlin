@@ -33,38 +33,41 @@ import java.io.File
  * - Объясни сложность - почему O(J + S) лучше чем O(J × S)
  */
 fun main(args: Array<String>) {
-    val j = readLine()!!
-    val s = readLine()!!
+//    val j = readLine()!!
+//    val s = readLine()!!
+//
+//    var result = 0
+//    for (c in s) {
+//        if (j.contains(c)) {
+//            result += 1;
+//        }
+//    }
+//
+//    println(result)
 
-    var result = 0
-    for (c in s) {
-        if (j.contains(c)) {
-            result += 1;
-        }
-    }
-
-    println(result)
+    checkChars()
 }
 
 /**
+ * Читаем из файла.
  *  J = "ab" → драгоценности: {'a', 'b'}
  *  S = "abcdeabb"
  */
 fun checkChars() {
     try {
-        val lines = File("input.txt").readLines()
+        val lines = File("src/test/resources/input.txt").readLines()
         if (lines.size < 2) {
             println("Ошибка: файл должен содержать две строки")
             return
         }
 
-        val J = lines[0]
-        val S = lines[1]
+        val J = lines[0] //J = "ab" → драгоценности: {'a', 'b'}
+        val S = lines[1] //S = "abcdeabb"
 
         val jewels = J.toSet()
         val count = S.count { it in jewels }
 
-        File("output.txt").writeText(count.toString())
+        File("src/test/resources/output.txt").writeText(count.toString())
         println("Результат: $count")
 
     } catch (e: Exception) {
