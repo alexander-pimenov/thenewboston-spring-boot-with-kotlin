@@ -500,6 +500,411 @@ package tv.codealong.tutorials.various.yandex.test1_1_introductory_contest
  * ```
  *
  * Теперь понятнее? Могу объяснить еще какую-то часть подробнее! 😊
+ * Отличная идея! Запустить код и посмотреть как он работает - лучший способ разобраться. Давай сделаем версию для работы с файлами.
+ *
+ * ## Версия для чтения из файла `input.txt`
+ *
+ * ```kotlin
+ * import java.util.*
+ * import java.io.File
+ *
+ * fun main() {
+ *     // Читаем все строки из файла
+ *     val lines = File("input.txt").readLines()
+ *
+ *     var index = 0
+ *     val n = lines[index++].toInt()
+ *     val cities = Array(n + 1) { Pair(0L, 0L) }
+ *
+ *     for (i in 1..n) {
+ *         val (x, y) = lines[index++].split(" ").map { it.toLong() }
+ *         cities[i] = Pair(x, y)
+ *     }
+ *
+ *     val k = lines[index++].toLong()
+ *     val (start, end) = lines[index].split(" ").map { it.toInt() }
+ *
+ *     // Проверка прямого пути
+ *     val (x1, y1) = cities[start]
+ *     val (x2, y2) = cities[end]
+ *     val directDistance = Math.abs(x1 - x2) + Math.abs(y1 - y2)
+ *
+ *     if (directDistance <= k) {
+ *         println(1)
+ *         return
+ *     }
+ *
+ *     // BFS
+ *     val visited = BooleanArray(n + 1)
+ *     val queue: Queue<Pair<Int, Int>> = LinkedList()
+ *     queue.add(Pair(start, 0))
+ *     visited[start] = true
+ *
+ *     var result = -1
+ *
+ *     while (queue.isNotEmpty()) {
+ *         val (current, roads) = queue.poll()
+ *
+ *         if (current == end) {
+ *             result = roads
+ *             break
+ *         }
+ *
+ *         val (xCur, yCur) = cities[current]
+ *
+ *         for (next in 1..n) {
+ *             if (!visited[next]) {
+ *                 val (xNext, yNext) = cities[next]
+ *                 val distance = Math.abs(xCur - xNext) + Math.abs(yCur - yNext)
+ *
+ *                 if (distance <= k) {
+ *                     visited[next] = true
+ *                     queue.add(Pair(next, roads + 1))
+ *                 }
+ *             }
+ *         }
+ *     }
+ *
+ *     println(result)
+ * }
+ * ```
+ *
+ * ## Создаем тестовые файлы:
+ *
+ * ### Файл `input1.txt` (Пример 1):
+ * ```
+ * 7
+ * 0 0
+ * 0 2
+ * 2 2
+ * 0 -2
+ * 2 -2
+ * 2 -1
+ * 2 1
+ * 2
+ * 1 3
+ * ```
+ *
+ * ### Файл `input2.txt` (Пример 2):
+ * ```
+ * 4
+ * 0 0
+ * 1 0
+ * 0 1
+ * 1 1
+ * 2
+ * 1 4
+ * ```
+ *
+ * ### Файл `input3.txt` (Пример 3):
+ * ```
+ * 4
+ * 0 0
+ * 2 0
+ * 0 2
+ * 2 2
+ * 1
+ * 1 4
+ * ```
+ *
+ * ## Универсальная версия (работает и с файлом и с консолью):
+ *
+ * ```kotlin
+ * import java.util.*
+ * import java.io.File
+ *
+ * fun main() {
+ *     val lines = if (File("input.txt").exists()) {
+ *         File("input.txt").readLines()
+ *     } else {
+ *         generateSequence { readLine() }.toList()
+ *     }
+ *
+ *     var index = 0
+ *     val n = lines[index++].toInt()
+ *     val cities = Array(n + 1) { Pair(0L, 0L) }
+ *
+ *     for (i in 1..n) {
+ *         val (x, y) = lines[index++].split(" ").map { it.toLong() }
+ *         cities[i] = Pair(x, y)
+ *     }
+ *
+ *     val k = lines[index++].toLong()
+ *     val (start, end) = lines[index].split(" ").map { it.toInt() }
+ *
+ *     // Проверка прямого пути
+ *     val (x1, y1) = cities[start]
+ *     val (x2, y2) = cities[end]
+ *     val directDistance = Math.abs(x1 - x2) + Math.abs(y1 - y2)
+ *
+ *     if (directDistance <= k) {
+ *         println(1)
+ *         return
+ *     }
+ *
+ *     // BFS
+ *     val visited = BooleanArray(n + 1)
+ *     val queue: Queue<Pair<Int, Int>> = LinkedList()
+ *     queue.add(Pair(start, 0))
+ *     visited[start] = true
+ *
+ *     var result = -1
+ *
+ *     while (queue.isNotEmpty()) {
+ *         val (current, roads) = queue.poll()
+ *
+ *         if (current == end) {
+ *             result = roads
+ *             break
+ *         }
+ *
+ *         val (xCur, yCur) = cities[current]
+ *
+ *         for (next in 1..n) {
+ *             if (!visited[next]) {
+ *                 val (xNext, yNext) = cities[next]
+ *                 val distance = Math.abs(xCur - xNext) + Math.abs(yCur - yNext)
+ *
+ *                 if (distance <= k) {
+ *                     visited[next] = true
+ *                     queue.add(Pair(next, roads + 1))
+ *                 }
+ *             }
+ *         }
+ *     }
+ *
+ *     println(result)
+ * }
+ * ```
+ *
+ * ## Версия с выводом в файл:
+ *
+ * ```kotlin
+ * import java.util.*
+ * import java.io.File
+ *
+ * fun main() {
+ *     val inputLines = File("input.txt").readLines()
+ *
+ *     var index = 0
+ *     val n = inputLines[index++].toInt()
+ *     val cities = Array(n + 1) { Pair(0L, 0L) }
+ *
+ *     for (i in 1..n) {
+ *         val (x, y) = inputLines[index++].split(" ").map { it.toLong() }
+ *         cities[i] = Pair(x, y)
+ *     }
+ *
+ *     val k = inputLines[index++].toLong()
+ *     val (start, end) = inputLines[index].split(" ").map { it.toInt() }
+ *
+ *     // Проверка прямого пути
+ *     val (x1, y1) = cities[start]
+ *     val (x2, y2) = cities[end]
+ *     val directDistance = Math.abs(x1 - x2) + Math.abs(y1 - y2)
+ *
+ *     if (directDistance <= k) {
+ *         File("output.txt").writeText("1")
+ *         return
+ *     }
+ *
+ *     // BFS
+ *     val visited = BooleanArray(n + 1)
+ *     val queue: Queue<Pair<Int, Int>> = LinkedList()
+ *     queue.add(Pair(start, 0))
+ *     visited[start] = true
+ *
+ *     var result = -1
+ *
+ *     while (queue.isNotEmpty()) {
+ *         val (current, roads) = queue.poll()
+ *
+ *         if (current == end) {
+ *             result = roads
+ *             break
+ *         }
+ *
+ *         val (xCur, yCur) = cities[current]
+ *
+ *         for (next in 1..n) {
+ *             if (!visited[next]) {
+ *                 val (xNext, yNext) = cities[next]
+ *                 val distance = Math.abs(xCur - xNext) + Math.abs(yCur - yNext)
+ *
+ *                 if (distance <= k) {
+ *                     visited[next] = true
+ *                     queue.add(Pair(next, roads + 1))
+ *                 }
+ *             }
+ *         }
+ *     }
+ *
+ *     File("output.txt").writeText(result.toString())
+ * }
+ * ```
+ *
+ * ## Как запустить:
+ *
+ * 1. **Создай файл `input.txt`** с тестовыми данными
+ * 2. **Запусти программу**
+ * 3. **Результат появится в консоли** или в файле `output.txt`
+ *
+ * ## Пример запуска для теста:
+ *
+ * **Создай `input.txt`:**
+ * ```
+ * 4
+ * 0 0
+ * 1 0
+ * 0 1
+ * 1 1
+ * 2
+ * 1 4
+ * ```
+ *
+ * **Запусти программу → получишь в выводе:**
+ * ```
+ * 1
+ * ```
+ *
+ * Теперь можешь экспериментировать с разными входными данными и смотреть как меняется результат! 😊
+ *
+ * Хочешь, я помогу разобрать выполнение программы пошагово на конкретном примере?
+ *
+ *
+ * k - это максимальное расстояние между городами, которое можно проехать без дозаправки машины.
  */
 
-fun main() {}
+import java.io.File
+import java.util.*
+import kotlin.math.abs
+
+fun main() {
+
+    exampleReadFromFile()
+
+}
+
+fun exampleReadFromConsole() {
+    val n = readLine()!!.toInt()
+    val cities = Array(n + 1) { Pair(0L, 0L) }
+
+    for (i in 1..n) {
+        val (x, y) = readLine()!!.split(" ").map { it.toLong() }
+        cities[i] = Pair(x, y)
+        println("Зарегистрирован город [$i] с координатами ($x, $y)")
+    }
+
+    val k = readLine()!!.toLong()
+    val (start, end) = readLine()!!.split(" ").map { it.toInt() }
+    println("Определено максимальное расстояние между городами, которое можно проехать без дозаправки машины к=$k")
+
+    // Проверка прямого пути
+    val (x1, y1) = cities[start]
+    val (x2, y2) = cities[end]
+    val directDistance = abs(x1 - x2) + abs(y1 - y2)
+
+    if (directDistance <= k) {
+        println(1)
+        return
+    }
+
+    // BFS
+    val visited = BooleanArray(n + 1)
+    val queue: Queue<Pair<Int, Int>> = LinkedList()
+    queue.add(Pair(start, 0))
+    visited[start] = true
+
+    var result = -1
+
+    while (queue.isNotEmpty()) {
+        val (current, roads) = queue.poll()
+
+        if (current == end) {
+            result = roads
+            break
+        }
+
+        val (xCur, yCur) = cities[current]
+
+        for (next in 1..n) {
+            if (!visited[next]) {
+                val (xNext, yNext) = cities[next]
+                val distance = abs(xCur - xNext) + abs(yCur - yNext)
+
+                if (distance <= k) {
+                    visited[next] = true
+                    queue.add(Pair(next, roads + 1))
+                }
+            }
+        }
+    }
+
+    println(result)
+}
+
+fun exampleReadFromFile() {
+    //    val lines = File("src/test/resources/inputCoordCities.txt").readLines()
+//    val n = lines[0].toInt() // в файле на первой строке указано количество городов/элементов в массиве
+//    if (n == 0) return
+    // Читаем все строки из файла
+    val lines = File("src/test/resources/inputCoordCities3.txt").readLines()
+
+    var index = 0
+    val n = lines[index++].toInt()
+    val cities = Array(n + 1) { Pair(0L, 0L) }
+
+    for (i in 1..n) {
+        val (x, y) = lines[index++].split(" ").map { it.toLong() }
+        cities[i] = Pair(x, y)
+        println("Зарегистрирован город [$i] с координатами ($x, $y)")
+    }
+
+    val k = lines[index++].toLong()
+    println("Определено максимальное расстояние между городами, которое можно проехать без дозаправки машины к=$k")
+    val (start, end) = lines[index].split(" ").map { it.toInt() }
+
+    // Проверка прямого пути
+    val (x1, y1) = cities[start]
+    val (x2, y2) = cities[end]
+    val directDistance = abs(x1 - x2) + abs(y1 - y2)
+    println("Необходимо вычислить расстояние/переходы между городами [$start] и [$end]")
+
+    if (directDistance <= k) {
+        println(1)
+        return
+    }
+
+    // BFS
+    val visited = BooleanArray(n + 1)
+    val queue: Queue<Pair<Int, Int>> = LinkedList()
+    queue.add(Pair(start, 0))
+    visited[start] = true
+
+    var result = -1
+
+    while (queue.isNotEmpty()) {
+        val (current, roads) = queue.poll()
+
+        if (current == end) {
+            result = roads
+            break
+        }
+
+        val (xCur, yCur) = cities[current]
+
+        for (next in 1..n) {
+            if (!visited[next]) {
+                val (xNext, yNext) = cities[next]
+                val distance = Math.abs(xCur - xNext) + Math.abs(yCur - yNext)
+
+                if (distance <= k) {
+                    visited[next] = true
+                    queue.add(Pair(next, roads + 1))
+                }
+            }
+        }
+    }
+
+    println(result)
+}
