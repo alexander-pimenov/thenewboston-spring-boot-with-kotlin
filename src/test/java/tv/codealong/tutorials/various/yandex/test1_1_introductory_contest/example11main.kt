@@ -773,6 +773,8 @@ package tv.codealong.tutorials.various.yandex.test1_1_introductory_contest
  *
  *
  * k - это максимальное расстояние между городами, которое можно проехать без дозаправки машины.
+ *
+ * Манхэттенское расстояние -  сумма модулей разности по каждой из координат.
  */
 
 import java.io.File
@@ -799,7 +801,7 @@ fun exampleReadFromConsole() {
     val (start, end) = readLine()!!.split(" ").map { it.toInt() }
     println("Определено максимальное расстояние между городами, которое можно проехать без дозаправки машины к=$k")
 
-    // Проверка прямого пути
+    // Проверка прямого пути - Манхэттенское расстояние
     val (x1, y1) = cities[start]
     val (x2, y2) = cities[end]
     val directDistance = abs(x1 - x2) + abs(y1 - y2)
@@ -864,7 +866,7 @@ fun exampleReadFromFile() {
     println("Определено максимальное расстояние между городами, которое можно проехать без дозаправки машины к=$k")
     val (start, end) = lines[index].split(" ").map { it.toInt() }
 
-    // Проверка прямого пути
+    // Проверка прямого пути - Манхэттенское расстояние
     val (x1, y1) = cities[start]
     val (x2, y2) = cities[end]
     val directDistance = abs(x1 - x2) + abs(y1 - y2)
