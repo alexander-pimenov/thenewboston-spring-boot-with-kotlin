@@ -190,9 +190,14 @@ package tv.codealong.tutorials.various.yandex.test1_1_introductory_contest
 
 fun main() {
     //читаем первый ввод:
-    val s1 = readLine()!!
+//    val s1 = readLine()!!
     //читаем второй ввод:
-    val s2 = readLine()!!
+//    val s2 = readLine()!!
+
+    //или так читаем из консоли только 2 строки:
+    val lines = generateSequence { readLine() }.take(2).toList()
+    val s1 = lines[0]
+    val s2 = lines[1]
 
     if (s1.length != s2.length) {
         println(0)
