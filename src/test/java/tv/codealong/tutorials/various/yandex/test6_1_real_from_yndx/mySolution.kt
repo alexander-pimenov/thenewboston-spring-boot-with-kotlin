@@ -2,9 +2,7 @@ package tv.codealong.tutorials.various.yandex.test6_1_real_from_yndx
 
 import java.math.BigDecimal
 import java.time.LocalDateTime
-import kotlin.collections.asSequence
 import kotlin.plus
-import kotlin.sequences.sumOf
 
 /*
 Вы — backend-разработчик в финтех компании.
@@ -65,7 +63,7 @@ class DayLimit(
 )
 
 interface LimitService {
-    fun checkLimit(payment: Payment): CheckStatusLimit
+    fun checkPaymentLimit(payment: Payment): CheckStatusLimit
 }
 
 interface LimitRepo {
@@ -73,16 +71,16 @@ interface LimitRepo {
 }
 
 interface HistoryOperation {
-    fun getHistoryOperation(userId: String, typeOperation: TypeOperation, startTime: LocalDateTime, endTime: LocalDateTime): List<Payment>
+    fun getHistoryOfUserPayments(userId: String, typeOperation: TypeOperation, startTime: LocalDateTime, endTime: LocalDateTime): List<Payment>
 }
 
 class LimitServiceImpl(
-    val repo: LimitRepo,
-    val historyOperation: HistoryOperation,
+    private val repo: LimitRepo,
+    private val historyOperation: HistoryOperation,
 ) : LimitService {
 
 
-    override fun checkLimit(payment: Payment): CheckStatusLimit {
+    override fun checkPaymentLimit(payment: Payment): CheckStatusLimit {
         val dayLimit = repo.getDayLimit(payment)
         val checkOne: CheckStatusLimit = checkDayLimitAmount(payment, dayLimit)
         val checkTwo: CheckStatusLimit = checkAmountPerOperation(payment, dayLimit)
@@ -101,8 +99,8 @@ class LimitServiceImpl(
     private fun checkDayLimitAmount(payment: Payment, limit: DayLimit): CheckStatusLimit {
 
         val listPayment =
-            historyOperation.getHistoryOperation(payment.userId, payment.typeOperation, LocalDateTime.now().minusDays(1), LocalDateTime.now())
-        val map = listPayment.asSequence().sumOf { it.amount }
+            historyOperation.getHistoryOfUserPayments(payment.userId, payment.typeOperation, LocalDateTime.now().minusDays(1), LocalDateTime.now())
+        val map = listPayment.sumOf { it.amount }
         val all = payment.amount + map
         return if (all >= limit.maxAmount) {
             CheckStatusLimit.Reject("limit.maxAmount + ${payment.amount}")

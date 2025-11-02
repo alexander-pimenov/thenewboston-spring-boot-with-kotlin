@@ -1,6 +1,5 @@
 package tv.codealong.tutorials.various.yandex.test6_1_real_from_yndx
 
-import io.mockk.MockKMatcherScope
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
@@ -44,7 +43,7 @@ class LimitServiceTest {
 
         every { repo.getDayLimit(any()) } returns dayLimit
         every {
-            historyOperation.getHistoryOperation(
+            historyOperation.getHistoryOfUserPayments(
                 any(),
                 TypeOperation.DEBIT,
                 LocalDateTime.of(2025, 10, 21, 0, 0),
@@ -52,7 +51,7 @@ class LimitServiceTest {
             )
         } returns listPayments
 
-        val result = limitService.checkLimit(payment)
+        val result = limitService.checkPaymentLimit(payment)
 
         when (result) {
             is CheckStatusLimit.Approved -> {
