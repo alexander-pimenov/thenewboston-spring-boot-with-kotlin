@@ -31,7 +31,8 @@ class LimitCheckServiceTest {
     }
 
     @Nested
-    inner class `When user has no limits` {
+    @DisplayName("Limits checks for user with no limits")
+    inner class WhenUserHasNoLimits {
 
         @BeforeEach
         fun setUp() {
@@ -55,7 +56,8 @@ class LimitCheckServiceTest {
     }
 
     @Nested
-    inner class `Single operation limit checks` {
+    @DisplayName("Single operation limit checks")
+    inner class SingleOperationLimitChecks {
 
         @Test
         fun `should reject when payment exceeds single operation limit`() {
@@ -120,7 +122,8 @@ class LimitCheckServiceTest {
     }
 
     @Nested
-    inner class `Daily limit checks` {
+    @DisplayName("Daily limit checks")
+    inner class DailyLimitChecks {
 
         @Test
         fun `should reject when payment exceeds daily limit`() {
@@ -180,6 +183,7 @@ class LimitCheckServiceTest {
         @Test
         @DisplayName("следует учитывать только платежи, произведенные в течение последних 24 часов")
         fun `should consider only payments within last 24 hours`() {
+            //этот платеж просто для примера, в список за последние 24 часа он не добавлен.
             val oldPayment1 = Payment(
                 testUserId,
                 BigDecimal("15000.00"),
@@ -215,7 +219,7 @@ class LimitCheckServiceTest {
                 testTime.minus(5, java.time.temporal.ChronoUnit.HOURS) // 5 часов назад - должно учитываться
             )
 
-            val existingPayments = listOf(oldPayment1, oldPayment2, oldPayment3, oldPayment4, recentPayment)
+            val existingPayments = listOf(oldPayment2, oldPayment3, oldPayment4, recentPayment)
 
             val newPayment = Payment(
                 userId = testUserId,
@@ -233,7 +237,6 @@ class LimitCheckServiceTest {
             } returns existingPayments // oldPayment не попадает в период
 
             val result = limitCheckService.checkPaymentLimits(newPayment)
-            //TODO - разобраться почему учитывается первый платеж? !!!
 
             assertTrue(result.isAllowed)
             assertNull(result.rejectionReason)
@@ -264,7 +267,8 @@ class LimitCheckServiceTest {
     }
 
     @Nested
-    inner class `Edge cases` {
+    @DisplayName("Edge cases (Крайние случаи)")
+    inner class EdgeCases {
 
         @Test
         fun `should handle zero amount payment`() {
@@ -306,7 +310,8 @@ class LimitCheckServiceTest {
     }
 
     @Nested
-    inner class `Integration scenarios` {
+    @DisplayName("Integration scenarios")
+    inner class IntegrationScenarios {
 
         @Test
         fun `should check both limits and fail on single operation first`() {

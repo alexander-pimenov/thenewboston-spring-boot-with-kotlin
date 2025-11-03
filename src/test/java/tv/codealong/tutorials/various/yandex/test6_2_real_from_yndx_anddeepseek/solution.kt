@@ -26,7 +26,7 @@ import java.time.temporal.ChronoUnit
  */
 
 /**
- * Модель данных
+ * Модель данных - платеж
  */
 data class Payment(
     val userId: String,
@@ -43,7 +43,7 @@ enum class OperationType {
 }
 
 /**
- * Модель данных
+ * Модель данных - пользовательские лимиты
  */
 data class UserLimits(
     val userId: String,
@@ -52,7 +52,7 @@ data class UserLimits(
 )
 
 /**
- * Модель данных
+ * Модель данных - результат проверки лимитов
  */
 data class LimitCheckResult(
     val isAllowed: Boolean,
