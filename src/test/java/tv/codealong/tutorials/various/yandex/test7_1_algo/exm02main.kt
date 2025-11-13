@@ -1,6 +1,8 @@
 package tv.codealong.tutorials.various.yandex.test7_1_algo
 
 /**
+ * Ссылка - https://education.yandex.ru/handbook/algorithms/article/odnosvyaznyj-spisok
+ *
  * Перепад цен
  *
  * Дан массив a, состоящий из n чисел.
