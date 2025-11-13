@@ -86,6 +86,6 @@ fun main() {
     val q = readLine()!!.toInt()
     repeat(q) {
         val line = readLine()!!.split(" ") // Читаем построчно
-        println(line) // Выводим для наглядности
+        println("размер массива: ${line.size}. Элементы: $line") // Выводим для наглядности
     }
 }
