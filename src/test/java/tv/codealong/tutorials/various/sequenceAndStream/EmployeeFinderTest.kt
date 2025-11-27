@@ -1,4 +1,4 @@
-package tv.codealong.tutorials.various.other
+package tv.codealong.tutorials.various.sequenceAndStream
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll

@@ -1,4 +1,4 @@
-package tv.codealong.tutorials.various.other
+package tv.codealong.tutorials.various.sequenceAndStream
 
 
 class EmployeeFinder {
