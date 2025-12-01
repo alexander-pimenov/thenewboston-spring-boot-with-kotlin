@@ -3,11 +3,12 @@ package tv.codealong.tutorials.various.sequenceAndStream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+
+import static tv.codealong.tutorials.various.sequenceAndStream.SequenceAndStreamKtTestKt.getEmployees;
 
 /**
  * ⚡ Ключевое отличие: Lazy vs Eager Evaluation
@@ -65,5 +66,86 @@ public class SequenceAndStreamJavaTest {
                 .boxed()
                 .collect(Collectors.toList());
         System.out.println(collect);
+    }
+
+    @Test
+    @DisplayName("1. Простая группировка по отделу")
+    public void testSimpleGrouping4() {
+        Map<String, List<Employee>> byDepartment = getEmployees().stream()
+                .collect(Collectors.groupingBy(Employee::getDepartment));
+        System.out.println(byDepartment);
+        //{
+        // Engineering=[
+        //      Employee(name=Alice, position=, department=Engineering, salary=5000),
+        //      Employee(name=Bob, position=, department=Engineering, salary=6000),
+        //      Employee(name=Eve, position=, department=Engineering, salary=5500)
+        //      ],
+        // Marketing=[
+        //      Employee(name=Charlie, position=, department=Marketing, salary=4500),
+        //      Employee(name=David, position=, department=Marketing, salary=4000)
+        //      ]
+        //}
+    }
+
+    @Test
+    @DisplayName("2. Группировка с подсчетом количества")
+    public void testSimpleGrouping5() {
+        Map<String, Long> countByDept = getEmployees().stream()
+                .collect(Collectors.groupingBy(
+                        Employee::getDepartment,
+                        Collectors.counting()));
+        System.out.println(countByDept);
+        //{Engineering=3, Marketing=2}
+    }
+
+    @Test
+    @DisplayName("3. Группировка с агрегацией")
+    public void testSimpleGrouping6() {
+        // Средняя зарплата по отделам
+        Map<String, Double> avgSalaryByDept = getEmployees().stream()
+                .collect(Collectors.groupingBy(
+                                Employee::getDepartment,
+                                Collectors.averagingDouble(Employee::getSalary)
+                        )
+                );
+        System.out.println(avgSalaryByDept);
+        //{Engineering=5500.0, Marketing=4250.0}
+
+        // Сумма зарплат по отделам
+        Map<String, Integer> sumSalaryByDept = getEmployees().stream()
+                .collect(Collectors.groupingBy(
+                        Employee::getDepartment,
+                        Collectors.summingInt(Employee::getSalary)
+                ));
+        System.out.println(sumSalaryByDept);
+        //{Engineering=16500, Marketing=8500}
+
+        // Минимальная зарплата по отделам
+        Map<String, Optional<Employee>> minSalaryByDept = getEmployees().stream()
+                .collect(Collectors.groupingBy(
+                                Employee::getDepartment,
+                                Collectors.minBy(Comparator.comparing(Employee::getSalary))
+                        )
+                );
+        System.out.println(minSalaryByDept);
+        //{
+        // Engineering=Optional[
+        //      Employee(name=Alice, position=, department=Engineering, salary=5000)
+        //      ],
+        // Marketing=Optional[
+        //      Employee(name=David, position=, department=Marketing, salary=4000)
+        //      ]
+        //}
+
+        // Группировка зарплат
+        Map<String, List<Integer>> salaryByDept = getEmployees().stream()
+                .collect(Collectors.groupingBy(
+                        Employee::getDepartment,
+                        Collectors.mapping(
+                                Employee::getSalary, Collectors.toList()
+                        )));
+        System.out.println(salaryByDept);
+        //{Engineering=[5000, 6000, 5500], Marketing=[4500, 4000]}
+
     }
 }

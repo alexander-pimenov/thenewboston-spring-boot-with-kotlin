@@ -229,8 +229,9 @@ class EmployeeFinderTest {
 
 data class Employee(
     val name: String,
-    val position: String,
-    val department: String = ""
+    val position: String = "",
+    val department: String = "",
+    val salary: Int = 0
 )
 
 data class Department(

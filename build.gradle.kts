@@ -7,6 +7,8 @@ plugins {
     id("org.springframework.boot") version "3.4.2"
     id("io.spring.dependency-management") version "1.1.7"
     kotlin("plugin.serialization") version "1.9.25"
+//    id("me.champeau.jmh") version "0.7.2"
+    kotlin("plugin.allopen") version "1.9.25"
 }
 
 group = "tv.codealong.tutorials.springboot"
@@ -107,6 +109,16 @@ dependencies {
     runtimeOnly("com.h2database:h2")
     annotationProcessor("org.projectlombok:lombok")
 
+    //
+//    jmh("org.openjdk.jmh:jmh-core:1.37")
+//    jmh("org.openjdk.jmh:jmh-generator-annprocess:1.37")
+    //если без плагина
+    implementation("org.openjdk.jmh:jmh-core:1.37")
+    annotationProcessor("org.openjdk.jmh:jmh-generator-annprocess:1.37")
+
+    testImplementation("org.openjdk.jmh:jmh-core:1.37")
+    testAnnotationProcessor("org.openjdk.jmh:jmh-generator-annprocess:1.37")
+
     //wiremock
     //implementation("org.wiremock:wiremock-standalone:3.9.2")
 
@@ -162,8 +174,44 @@ allOpen {
     annotation("jakarta.persistence.Entity")
     annotation("jakarta.persistence.MappedSuperclass")
     annotation("jakarta.persistence.Embeddable")
+//    annotation("org.openjdk.jmh.annotations.State")
 }
+
 
 tasks.withType<Test> {
     useJUnitPlatform()
 }
+
+//эта таска нужна, если не использовать плагин jmh - id("me.champeau.jmh") version "0.7.2"
+tasks.register<JavaExec>("jmh2") {
+    group = "verification"
+    description = "Run JMH benchmarks"
+    classpath = sourceSets["test"].runtimeClasspath
+//    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("org.openjdk.jmh.Main")
+}
+
+//Gradle (Kotlin DSL) с плагином jmh (Java Microbenchmark Harness)
+//Самый простой вариант — использовать jmh‑плагин:
+//plugins {
+//    kotlin("jvm") version "1.9.25" // или твоя версия
+//    id("org.springframework.boot") version "3.3.0" // пример
+//    id("io.spring.dependency-management")
+//    id("me.champeau.jmh") version "0.7.2"
+//    kotlin("plugin.allopen") version "1.9.25"
+//}
+//
+//repositories {
+//    mavenCentral()
+//}
+//
+//dependencies {
+//    implementation("org.springframework.boot:spring-boot-starter")
+//
+//    jmh("org.openjdk.jmh:jmh-core:1.37")
+//    jmh("org.openjdk.jmh:jmh-generator-annprocess:1.37")
+//}
+//
+//allOpen {
+//    annotation("org.openjdk.jmh.annotations.State")
+//}
