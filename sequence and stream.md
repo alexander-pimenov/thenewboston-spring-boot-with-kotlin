@@ -372,4 +372,319 @@ open class SequenceVsCollectionBenchmark {
 
 ---
 
+Отлично! Группировка данных - очень важная тема на собеседованиях. Давай разберем подробно с примерами.
+
+## 📊 Группировка в Java Stream
+
+### Базовые операции группировки
+
+```java
+// Подготовим данные
+List<Employee> employees = Arrays.asList(
+    new Employee("Alice", "Engineering", 5000),
+    new Employee("Bob", "Engineering", 6000),
+    new Employee("Charlie", "Marketing", 4500),
+    new Employee("David", "Marketing", 4000),
+    new Employee("Eve", "Engineering", 5500)
+);
+```
+
+### 1. Простая группировка по отделу
+```java
+Map<String, List<Employee>> byDepartment = employees.stream()
+    .collect(Collectors.groupingBy(Employee::getDepartment));
+
+// Результат: {Engineering=[Alice, Bob, Eve], Marketing=[Charlie, David]}
+```
+
+### 2. Группировка с подсчетом количества
+```java
+Map<String, Long> countByDepartment = employees.stream()
+    .collect(Collectors.groupingBy(
+        Employee::getDepartment,
+        Collectors.counting()
+    ));
+
+// Результат: {Engineering=3, Marketing=2}
+```
+
+### 3. Группировка с агрегацией
+```java
+// Средняя зарплата по отделам
+Map<String, Double> avgSalaryByDept = employees.stream()
+    .collect(Collectors.groupingBy(
+        Employee::getDepartment,
+        Collectors.averagingDouble(Employee::getSalary)
+    ));
+
+// Сумма зарплат по отделам
+Map<String, Integer> sumSalaryByDept = employees.stream()
+    .collect(Collectors.groupingBy(
+        Employee::getDepartment,
+        Collectors.summingInt(Employee::getSalary)
+    ));
+
+// Минимальная зарплата по отделам
+Map<String, Optional<Employee>> minSalaryByDept = employees.stream()
+    .collect(Collectors.groupingBy(
+        Employee::getDepartment,
+        Collectors.minBy(Comparator.comparing(Employee::getSalary))
+    ));
+```
+
+## 📈 Группировка в Kotlin
+
+### Базовые операции с Sequence
+
+```kotlin
+data class Employee(val name: String, val department: String, val salary: Int)
+
+val employees = listOf(
+    Employee("Alice", "Engineering", 5000),
+    Employee("Bob", "Engineering", 6000),
+    Employee("Charlie", "Marketing", 4500),
+    Employee("David", "Marketing", 4000),
+    Employee("Eve", "Engineering", 5500)
+)
+```
+
+### 1. Простая группировка
+```kotlin
+val byDepartment = employees.groupBy { it.department }
+
+// С использованием sequence (ленивая обработка)
+val byDepartmentSequence = employees.asSequence()
+    .groupBy { it.department }
+```
+
+### 2. Группировка с преобразованием
+```kotlin
+// Группировка имен сотрудников по отделам
+val namesByDepartment = employees.groupBy(
+    keySelector = { it.department },
+    valueTransform = { it.name }
+)
+// Результат: {Engineering=[Alice, Bob, Eve], Marketing=[Charlie, David]}
+
+// Группировка зарплат
+val salariesByDepartment = employees.groupBy(
+    keySelector = { it.department },
+    valueTransform = { it.salary }
+)
+```
+
+### 3. Продвинутая группировка
+```kotlin
+// Группировка с агрегацией
+val statsByDepartment = employees.groupingBy { it.department }
+    .aggregate { key, accumulator: EmployeeStats?, employee, first ->
+        if (first) {
+            EmployeeStats(employee.salary, employee.salary, employee.salary, 1)
+        } else {
+            accumulator!!.copy(
+                minSalary = minOf(accumulator.minSalary, employee.salary),
+                maxSalary = maxOf(accumulator.maxSalary, employee.salary),
+                totalSalary = accumulator.totalSalary + employee.salary,
+                count = accumulator.count + 1
+            )
+        }
+    }
+
+data class EmployeeStats(
+    val minSalary: Int,
+    val maxSalary: Int,
+    val totalSalary: Int,
+    val count: Int
+) {
+    val averageSalary get() = totalSalary.toDouble() / count
+}
+```
+
+## 🔄 Сложные сценарии группировки
+
+### Многоуровневая группировка
+
+**Java:**
+```java
+// Группировка по отделу, а затем по диапазону зарплат
+Map<String, Map<String, List<Employee>>> multiLevel = employees.stream()
+    .collect(Collectors.groupingBy(
+        Employee::getDepartment,
+        Collectors.groupingBy(employee -> {
+            if (employee.getSalary() < 4500) return "LOW";
+            else if (employee.getSalary() < 5500) return "MEDIUM";
+            else return "HIGH";
+        })
+    ));
+```
+
+**Kotlin:**
+```kotlin
+val multiLevel = employees.groupBy(
+    keySelector = { it.department },
+    valueTransform = { it to (if (it.salary < 4500) "LOW" 
+                            else if (it.salary < 5500) "MEDIUM" 
+                            else "HIGH") }
+).mapValues { (_, values) ->
+    values.groupBy { it.second }
+}
+```
+
+### Группировка с фильтрацией
+
+**Java:**
+```java
+// Группировка только высокооплачиваемых сотрудников
+Map<String, List<Employee>> highEarnersByDept = employees.stream()
+    .filter(e -> e.getSalary() > 5000)
+    .collect(Collectors.groupingBy(Employee::getDepartment));
+```
+
+**Kotlin:**
+```kotlin
+val highEarnersByDept = employees.asSequence()
+    .filter { it.salary > 5000 }
+    .groupBy { it.department }
+```
+
+## 🎯 Практические примеры для собеседования
+
+### Пример 1: Анализ слов в тексте
+```kotlin
+val text = "hello world hello kotlin world java kotlin java hello"
+
+// Подсчет частоты слов
+val wordFrequency = text.split(" ").asSequence()
+    .groupingBy { it }
+    .eachCount()
+
+// Результат: {hello=3, world=2, kotlin=2, java=2}
+
+// Группировка по длине слов
+val wordsByLength = text.split(" ").asSequence()
+    .groupBy { it.length }
+    .mapValues { (_, words) -> words.distinct() }
+
+// Результат: {5=[hello, world, kotlin], 4=[java]}
+```
+
+### Пример 2: Группировка заказов
+```kotlin
+data class Order(val id: Int, val customer: String, val amount: Double, val category: String)
+
+val orders = listOf(
+    Order(1, "Alice", 100.0, "Electronics"),
+    Order(2, "Bob", 50.0, "Books"),
+    Order(3, "Alice", 75.0, "Books"),
+    Order(4, "Charlie", 200.0, "Electronics"),
+    Order(5, "Bob", 150.0, "Electronics")
+)
+
+// Сумма заказов по клиентам
+val totalByCustomer = orders.asSequence()
+    .groupBy { it.customer }
+    .mapValues { (_, orders) -> orders.sumOf { it.amount } }
+
+// Количество заказов по категориям
+val countByCategory = orders.asSequence()
+    .groupingBy { it.category }
+    .eachCount()
+
+// Средний чек по категориям
+val avgByCategory = orders.asSequence()
+    .groupBy { it.category }
+    .mapValues { (_, orders) -> orders.map { it.amount }.average() }
+```
+
+## ⚡ Производительность группировки
+
+### Сравнение подходов
+
+```kotlin
+// Большой набор данных
+val largeEmployeeList = (1..1_000_000).map { 
+    Employee("Employee$it", "Dept${it % 100}", 1000 + it % 5000)
+}
+
+// Обычная группировка
+fun withRegularGrouping(): Map<String, Int> {
+    return largeEmployeeList
+        .groupBy { it.department }
+        .mapValues { (_, employees) -> employees.sumOf { it.salary } }
+}
+
+// Группировка с sequence
+fun withSequenceGrouping(): Map<String, Int> {
+    return largeEmployeeList.asSequence()
+        .groupBy { it.department }
+        .mapValues { (_, employees) -> employees.sumOf { it.salary } }
+}
+
+// Группировка с агрегацией (самый эффективный)
+fun withAggregateGrouping(): Map<String, Int> {
+    return largeEmployeeList.asSequence()
+        .groupingBy { it.department }
+        .aggregate { _, accumulator: Int?, employee, first ->
+            if (first) employee.salary else accumulator!! + employee.salary
+        }
+}
+```
+
+## 💡 Вопросы с собеседования по группировке
+
+### Вопрос 1: "Как сгруппировать сотрудников по отделам и вывести топ-2 по зарплате в каждом?"
+
+**Ответ:**
+```kotlin
+val topEmployeesByDept = employees.asSequence()
+    .groupBy { it.department }
+    .mapValues { (_, deptEmployees) ->
+        deptEmployees.sortedByDescending { it.salary }.take(2)
+    }
+```
+
+### Вопрос 2: "Как найти отдел с максимальной суммарной зарплатой?"
+
+**Ответ:**
+```kotlin
+val deptWithMaxSalary = employees.asSequence()
+    .groupingBy { it.department }
+    .aggregate { _, accumulator: Int?, employee, first ->
+        if (first) employee.salary else accumulator!! + employee.salary
+    }
+    .maxByOrNull { it.value }?.key
+```
+
+### Вопрос 3: "Как сгруппировать данные по нескольким полям?"
+
+**Ответ:**
+```kotlin
+// Группировка по комбинации полей
+val byDeptAndSalaryRange = employees.asSequence()
+    .groupBy { 
+        "${it.department}_${if (it.salary < 5000) "JUNIOR" else "SENIOR"}" 
+    }
+```
+
+## 🚀 Полезные методы для группировки
+
+### Java Collectors:
+- `groupingBy()` - основная группировка
+- `counting()` - подсчет элементов
+- `summingInt/Long/Double()` - суммирование
+- `averagingInt/Long/Double()` - среднее значение
+- `maxBy()/minBy()` - максимум/минимум
+- `mapping()` - преобразование значений
+- `reducing()` - кастомная агрегация
+
+### Kotlin методы:
+- `groupBy()` - базовая группировка
+- `groupingBy()` - для последующей агрегации
+- `eachCount()` - подсчет количества
+- `fold()` / `reduce()` - агрегация
+- `aggregate()` - кастомная агрегация
+
+Хочешь разберем конкретные кейсы или попрактикуемся на задачах? 😊
+
+---
 
