@@ -212,7 +212,7 @@ class SequenceAndStreamKtTest {
     }
 
     @Test
-    @DisplayName("3. Группировка с агрегацией")
+    @DisplayName("3. Группировка с агрегацией. Вариант 1")
     fun testSimpleGrouping6() {
         // Средняя зарплата по отделам
         val avgSalaryByDept = employees
@@ -253,7 +253,121 @@ class SequenceAndStreamKtTest {
         //}
     }
 
-    //TODO - 3. Продвинутая группировка
+    @Test
+    @DisplayName("3. Группировка с агрегацией. Вариант advanced")
+    fun testAdvancedGrouping() {
+        // Группировка с агрегацией - статистика по департаментам
+        val statsByDepartment = employees.groupingBy { it.department }
+            .aggregate { key, accumulator: EmployeeStats?, employee, first ->
+                if (first) { //когда первый раз встречается элемент
+                    EmployeeStats(employee.salary, employee.salary, employee.salary, 1)
+
+                } else {
+                    //удобно создаем копию объекта и наполняем её (т.к. не можем модифицировать объект)
+                    accumulator!!.copy(
+                        minSalary = minOf(accumulator.minSalary, employee.salary),
+                        maxSalary = maxOf(accumulator.maxSalary, employee.salary),
+                        totalSalary = accumulator.totalSalary + employee.salary,
+                        count = accumulator.count + 1
+                    )
+                }
+            }
+        println(statsByDepartment)
+        // {
+        // Engineering=EmployeeStats(minSalary=5000, maxSalary=6000, totalSalary=16500, count=3),
+        // Marketing=EmployeeStats(minSalary=4000, maxSalary=4500, totalSalary=8500, count=2)
+        // }
+    }
+
+    @Test
+    @DisplayName("4. Многоуровневая группировка")
+    fun testMultiLevelGrouping() {
+        // Группировка по отделу, а затем по диапазону зарплат
+        val multiLevel = employees.groupBy(
+            keySelector = { it.department }, //ключ - департамент
+            valueTransform = {
+                it to (if (it.salary < 4500) "LOW"
+                else if (it.salary < 5500) "MEDIUM"
+                else "HIGH")
+            } // в качестве значения - возвращаем список пар с объектом и диапазоном: List<Pair<Employee, String>>
+        )
+
+        println(multiLevel)
+        //{Engineering=[(Employee(name=Alice, position=, department=Engineering, salary=5000), MEDIUM), (Employee(name=Bob, position=, department=Engineering, salary=6000), HIGH), (Employee(name=Eve, position=, department=Engineering, salary=5500), HIGH)], Marketing=[(Employee(name=Charlie, position=, department=Marketing, salary=4500), MEDIUM), (Employee(name=David, position=, department=Marketing, salary=4000), LOW)]}
+
+        val multiLevel2 = employees.groupBy(
+            keySelector = { it.department },
+            valueTransform = {
+                it to (if (it.salary < 4500) "LOW"
+                else if (it.salary < 5500) "MEDIUM"
+                else "HIGH")
+            }
+        ).mapValues { (_, values) ->
+            // values - это список пар с объектом и диапазоном, после очередной группировки это будет Map
+            // с ключом - диапазоном зарплат ("LOW"; "MEDIUM"; "HIGH"), а значением - список объектов Employee
+            values.groupBy { it.second }
+                .mapValues {
+                    it.value.map { pair ->
+                        pair.first
+                    }
+                }
+        }
+
+        println(multiLevel2)
+        // {
+        // Engineering={
+        //   MEDIUM=[Employee(name=Alice, position=, department=Engineering, salary=5000)],
+        //   HIGH=[Employee(name=Bob, position=, department=Engineering, salary=6000), Employee(name=Eve, position=, department=Engineering, salary=5500)]},
+        // Marketing={
+        //   MEDIUM=[Employee(name=Charlie, position=, department=Marketing, salary=4500)],
+        //   LOW=[Employee(name=David, position=, department=Marketing, salary=4000)]}
+        // }
+    }
+
+    @Test
+    @DisplayName("5. Группировка с фильтрацией")
+    fun testSimpleGrouping7() {
+        // Группировка только высокооплачиваемых сотрудников
+        val highEarnersByDept = employees.asSequence()
+            .filter { it.salary > 5000 }
+            .groupBy { it.department }
+        println(highEarnersByDept)
+        //{
+        //  Engineering=[Employee(name=Bob, position=, department=Engineering, salary=6000),
+        //  Employee(name=Eve, position=, department=Engineering, salary=5500)]
+        // }
+    }
+
+    @Test
+    @DisplayName("6. Анализ слов в тексте")
+    fun testWordCount() {
+        val text = "hello world hello kotlin world java kotlin java hello"
+
+        // Подсчет частоты слов
+        val wordFrequency = text.split(" ").asSequence()
+            .groupBy { it }
+        println(wordFrequency)
+        // {hello=[hello, hello, hello],
+        // world=[world, world],
+        // kotlin=[kotlin, kotlin],
+        // java=[java, java]}
+        val wordFrequency2 = text.split(" ")
+            .groupingBy { it } //т.к. далее напротив ключа одно значение, то используем groupingBy
+            .eachCount()
+        println(wordFrequency2)
+        //{hello=3, world=2, kotlin=2, java=2}
+
+        // Группировка по длине слов
+        val wordsByLength = text.split(" ").asSequence()
+            .groupBy { it.length }
+            .mapValues { (_, worlds) ->
+                worlds.distinct()
+            }
+        println(wordsByLength)
+        //{5=[hello, world], 6=[kotlin], 4=[java]}
+    }
+
+    //TODO - Пример 2: Группировка заказов
 
 }
 
@@ -277,3 +391,12 @@ val employees: List<Employee> = listOf(
 )
 
 data class User(val name: String, val age: Int)
+
+data class EmployeeStats(
+    val minSalary: Int,
+    val maxSalary: Int,
+    val totalSalary: Int,
+    val count: Int,
+) {
+    val averageSalary get() = totalSalary.toDouble() / count
+}

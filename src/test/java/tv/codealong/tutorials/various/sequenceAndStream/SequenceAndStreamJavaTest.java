@@ -148,4 +148,59 @@ public class SequenceAndStreamJavaTest {
         //{Engineering=[5000, 6000, 5500], Marketing=[4500, 4000]}
 
     }
+
+    @Test
+    @DisplayName("4. Многоуровневая группировка")
+    public void  testMultiLevelGrouping(){
+        // Группировка по отделу, а затем по диапазону зарплат
+        Map<String, Map<String, List<Employee>>> multiLevel  = getEmployees().stream()
+                .collect(Collectors.groupingBy(
+                        // Группировка по отделу - это ключ во внешнем Map
+                        Employee::getDepartment,
+                        Collectors.groupingBy(employee -> {
+                            // Внутренний Collector.groupingBy() работает с Employee
+                            // Диапазоны "low"; "middle"; "high" становятся новыми ключами вложенного Map
+                            // а в значениях - списки сотрудников
+                            if (employee.getSalary() < 4500) return "low";
+                            else if (employee.getSalary() < 5500) return "middle";
+                            else return "high";
+                        })
+                ));
+
+        System.out.println(multiLevel);
+        // {
+        // Engineering={
+        //          high=[
+        //                  Employee(name=Bob, position=, department=Engineering, salary=6000),
+        //                  Employee(name=Eve, position=, department=Engineering, salary=5500)
+        //                ],
+        //           middle=[
+        //                  Employee(name=Alice, position=, department=Engineering, salary=5000)
+        //                ]
+        // },
+        // Marketing={
+        //          middle=[
+        //                  Employee(name=Charlie, position=, department=Marketing, salary=4500)
+        //                  ],
+        //           low=[
+        //                  Employee(name=David, position=, department=Marketing, salary=4000)
+        //                ]
+        //  }
+        // }
+    }
+
+    @Test
+    @DisplayName("5. Группировка с фильтрацией")
+    public void testSimpleGrouping7() {
+        // Группировка только высокооплачиваемых сотрудников
+        Map<String, List<Employee>> highEarnersByDept  = getEmployees().stream()
+                .filter(e -> e.getSalary() > 5000)
+                .collect(Collectors.groupingBy(Employee::getDepartment));
+
+        System.out.println(highEarnersByDept);
+        //{
+        //  Engineering=[Employee(name=Bob, position=, department=Engineering, salary=6000),
+        //  Employee(name=Eve, position=, department=Engineering, salary=5500)]
+        // }
+    }
 }
