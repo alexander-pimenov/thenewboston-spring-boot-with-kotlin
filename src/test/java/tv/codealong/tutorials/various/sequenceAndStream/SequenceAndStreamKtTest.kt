@@ -7,6 +7,14 @@ import org.junit.jupiter.api.Test
  * ⚡ Ключевое отличие: Lazy vs Eager Evaluation
  * Stream - ленивые операции, но создает новый Stream на каждом шаге
  * Sequence - полностью ленивые вычисления, обрабатывает элементы по одному
+ *
+ * 🚀 Полезные методы для группировки
+ * Kotlin методы:
+ * groupBy() - базовая группировка
+ * groupingBy() - для последующей агрегации
+ * eachCount() - подсчет количества
+ * fold() / reduce() - агрегация
+ * aggregate() - кастомная агрегация
  */
 class SequenceAndStreamKtTest {
     @Test
@@ -283,7 +291,7 @@ class SequenceAndStreamKtTest {
     @DisplayName("4. Многоуровневая группировка")
     fun testMultiLevelGrouping() {
         // Группировка по отделу, а затем по диапазону зарплат
-        val multiLevel = employees.groupBy(
+        val multiLevel: Map<String, List<Pair<Employee, String>>> = employees.groupBy(
             keySelector = { it.department }, //ключ - департамент
             valueTransform = {
                 it to (if (it.salary < 4500) "LOW"
@@ -367,8 +375,305 @@ class SequenceAndStreamKtTest {
         //{5=[hello, world], 6=[kotlin], 4=[java]}
     }
 
-    //TODO - Пример 2: Группировка заказов
+    @Test
+    @DisplayName("7. Группировка заказов: Сумма заказов по клиентам")
+    fun testOrderGrouping() {
+        val totalByCustomer: Map<String, Double> = orders
+            .groupBy { it.customer }
+            .mapValues { (_, orders) ->
+                orders.sumOf { it.amount }
+            }
+        println(totalByCustomer)
+        //{Alice=175.0, Bob=200.0, Charlie=200.0}
+    }
 
+    @Test
+    @DisplayName("7. Группировка заказов: Количество заказов по категориям")
+    fun testCountByCategory() {
+        val countByCategory: Map<String, Int> = orders
+            .groupingBy { it.category }
+            .eachCount()
+        println(countByCategory)
+        //{Books=2, Electronics=3}
+    }
+
+    @Test
+    @DisplayName("7. Группировка заказов: Средний чек по категориям")
+    fun testAvgByCategory() {
+        val avgByCategory: Map<String, Double> = orders
+            .groupBy { it.category }
+            .mapValues { (_, orders) ->
+                orders.sumOf { it.amount } / orders.size
+            }
+        println(avgByCategory)
+        //{Electronics=150.0, Books=62.5}
+
+        val avgByCategory2: Map<String, Double> = orders.asSequence()
+            .groupBy { it.category }
+            .mapValues { (_, orders) ->
+                orders.map { it.amount }.average() //average() - среднее значение из списка Order.amount
+            }
+        println(avgByCategory2)
+        //{Electronics=150.0, Books=62.5}
+    }
+
+    @Test
+    @DisplayName("⚡ Производительность группировки")
+    fun testPerformance() {
+        // Обычная группировка
+        val withRegularGrouping = largeEmployeeList
+            .groupBy { it.department }
+            .mapValues { (_, employees) ->
+                employees.sumOf { it.salary }
+            }
+        println(withRegularGrouping)
+
+        // Группировка с sequence
+        val withSequenceGrouping: Map<String, Int> =
+            largeEmployeeList.asSequence()
+                .groupBy { it.department }
+                .mapValues { (_, employees) ->
+                    employees.sumOf { it.salary }
+                }
+
+        println(withSequenceGrouping)
+
+        // Группировка с агрегацией (самый эффективный)
+        val withAggregateGrouping: Map<String, Int> =
+            largeEmployeeList.asSequence()
+                .groupingBy { it.department }
+                .aggregate { key, accumulator: Int?, employee, first ->
+                    if (first) employee.salary else
+                        accumulator!! + employee.salary
+                }
+        println(withAggregateGrouping)
+
+    }
+
+    @Test
+    @DisplayName("Вопрос 1: сгруппировать сотрудников по отделам и вывести топ-2 по зарплате в каждом")
+    fun testQuestion1() {
+        val topEmployeesByDept: Map<String, List<Employee>> = employees
+            .groupBy { it.department }
+            .mapValues { (_, employees) ->
+                employees.sortedByDescending { it.salary }.take(2)
+            }
+        println(topEmployeesByDept)
+        // {
+        // Engineering=[
+        //      Employee(name=Bob, position=, department=Engineering, salary=6000),
+        //      Employee(name=Eve, position=, department=Engineering, salary=5500)
+        //   ],
+        // Marketing=[
+        //      Employee(name=Charlie, position=, department=Marketing, salary=4500),
+        //      Employee(name=David, position=, department=Marketing, salary=4000)
+        //   ]
+        // }
+    }
+
+    @Test
+    @DisplayName("Вопрос 2: найти отдел с максимальной суммарной зарплатой")
+    fun testQuestion2() {
+        val deptWithMaxSalary = employees
+            .groupingBy { it.department }
+            .aggregate { key, accumulator: Int?, employee, first ->
+                if (first) employee.salary else
+                    accumulator!! + employee.salary
+            }
+            .maxByOrNull { it.value }?.key
+        println(deptWithMaxSalary)
+        //Engineering
+
+        //2-й вариант
+        val deptWithMaxSalary2 = employees
+            .groupBy { it.department }
+            .maxByOrNull { empls ->
+                empls.value.sumOf { employee ->
+                    employee.salary
+                }
+            }?.key
+        println(deptWithMaxSalary2)
+        //Engineering
+
+        //2-й вариант
+        val deptWithMaxSalary3 = employees
+            .groupBy { it.department }
+            .maxByOrNull { empls ->
+                empls.value.sumOf { employee ->
+                    employee.salary
+                }
+            }
+        println(deptWithMaxSalary3)
+        //Engineering=[Employee(name=Alice, position=, department=Engineering, salary=5000), Employee(name=Bob, position=, department=Engineering, salary=6000), Employee(name=Eve, position=, department=Engineering, salary=5500)]
+
+    }
+
+    @Test
+    @DisplayName("Вопрос 3: сгруппировать данные по нескольким полям")
+    fun testQuestion3() {
+        // Группировка по комбинации полей
+        val byDeptAndSalaryRange: Map<String, List<Employee>> = employees
+            .groupBy {
+                "${it.department}_${if (it.salary < 5000) "JUNIOR" else "SENIOR"}"
+            }
+
+        println(byDeptAndSalaryRange)
+        // {
+        // Engineering_SENIOR=[
+        //      Employee(name=Alice, position=, department=Engineering, salary=5000),
+        //      Employee(name=Bob, position=, department=Engineering, salary=6000),
+        //      Employee(name=Eve, position=, department=Engineering, salary=5500)
+        //    ],
+        //  Marketing_JUNIOR=[
+        //          Employee(name=Charlie, position=, department=Marketing, salary=4500),
+        //          Employee(name=David, position=, department=Marketing, salary=4000)
+        //    ]
+        // }
+    }
+
+    @Test
+    @DisplayName("Задача 1: Анализ транзакций:  Найти общую сумму транзакций по категориям")
+    fun testTask1() {
+        val totalByCategory: Map<String, Double> =
+            transactions.groupBy { it.category }
+                .mapValues { (_, trans) ->
+                    trans.sumOf { it.amount }
+                }
+        println(totalByCategory)
+        //{Electronics=550.0, Food=125.0, Clothing=450.0}
+    }
+
+    @Test
+    @DisplayName("Задача 1: Найти топ-3 клиента по общей сумме трат")
+    fun testTask2() {
+        val top3Customers: List<Pair<String, Double>> =
+            transactions.groupingBy { it.customer }
+                .aggregate { _, accumulator: Double?, transaction, first ->
+                    if (first) transaction.amount else accumulator!! + transaction.amount
+                }
+                .toList()
+                .sortedByDescending { it.second }
+                .take(3)
+        println(top3Customers)
+        //[(Alice, 450.0), (Charlie, 300.0), (David, 250.0)]
+
+        val top3Customers2: List<Pair<String, Double>> =
+            transactions.groupingBy { it.customer }
+                .aggregate { _, accumulator: Double?, transaction, first ->
+                    if (first) transaction.amount else accumulator!! + transaction.amount
+                }
+                .entries.sortedByDescending { it.value }
+                .take(3)
+                .map { it.key to it.value }
+        println(top3Customers2)
+        //[(Alice, 450.0), (Charlie, 300.0), (David, 250.0)]
+
+        val toList: List<Pair<String, Double>> = transactions.groupingBy { it.customer }
+            .aggregate { _, accumulator: Double?, transaction, first ->
+                if (first) transaction.amount else accumulator!! + transaction.amount
+            }.toList()
+        println(toList)
+        //[(Alice, 450.0), (Bob, 125.0), (Charlie, 300.0), (David, 250.0)]
+
+
+    }
+
+    @Test
+    @DisplayName("Задача 1: Найти города с максимальной транзакцией в каждой категории")
+    fun testTask3() {
+        val maxTransactionByCategoryPerCity: Map<String, Map<String, Transaction>> =
+            transactions
+                .groupBy { it.category }
+                .mapValues { (_, categoryTrans) ->
+                    categoryTrans.groupBy { it.city }
+                        .mapValues { (_, cityTrans) ->
+                            cityTrans.maxBy { it.amount }
+                        }
+                }
+        println(maxTransactionByCategoryPerCity)
+        // {
+        //  Electronics={
+        //          New York=Transaction(id=1, customer=Alice, amount=150.0, category=Electronics, city=New York, date=2024-01-15),
+        //          Boston=Transaction(id=4, customer=Charlie, amount=300.0, category=Electronics, city=Boston, date=2024-01-16)
+        //  },
+        //  Food={
+        //          Boston=Transaction(id=2, customer=Bob, amount=75.0, category=Food, city=Boston, date=2024-01-15)
+        //  },
+        //  Clothing={
+        //          New York=Transaction(id=3, customer=Alice, amount=200.0, category=Clothing, city=New York, date=2024-01-16),
+        //          Chicago=Transaction(id=7, customer=David, amount=250.0, category=Clothing, city=Chicago, date=2024-01-17)
+        //  }
+        // }
+    }
+
+    @Test
+    @DisplayName("Задача 2: Найти среднее время выполнения для каждого действия")
+    fun testTask4() {
+        val averageDurationByAction: Map<String, Double> = logs.asSequence().groupBy { it.action }
+            .mapValues { (_, logs) ->
+                logs.map { it.duration }.average()
+            }
+        println(averageDurationByAction)
+        //{login=287.5, view_page=62.5, logout=100.0}
+    }
+
+    @Test
+    @DisplayName("Задача 2: Найти пользователей с количеством успешных и неуспешных операций")
+    fun testTask5() {
+
+        val userSuccessStats: Map<String, Pair<Int, Int>> =
+            logs.groupBy { it.userId }
+                .mapValues { (_, userlogs) ->
+                    val success = userlogs.count { it.status == "SUCCESS" }
+                    val failed = userlogs.count { it.status == "FAILED" }
+                    success to failed
+                }
+        println(userSuccessStats)
+        //{user1=(3, 0), user2=(2, 0), user3=(1, 1)}
+    }
+
+    @Test
+    @DisplayName("Задача 2: Найти самое популярное действие для каждого пользователя")
+    fun testTask6() {
+
+        val groupByUser = logs.groupBy { it.userId }
+        println(groupByUser)
+
+        // {
+        //    user1=[
+        //      LogEntry(timestamp=2024-01-15 10:00:00, userId=user1, action=login, duration=150, status=SUCCESS),
+        //      LogEntry(timestamp=2024-01-15 10:02:00, userId=user1, action=view_page, duration=50, status=SUCCESS),
+        //      LogEntry(timestamp=2024-01-15 10:05:00, userId=user1, action=logout, duration=100, status=SUCCESS)
+        //      ],
+        //    user2=[
+        //      LogEntry(timestamp=2024-01-15 10:01:00, userId=user2, action=login, duration=200, status=SUCCESS),
+        //      LogEntry(timestamp=2024-01-15 10:04:00, userId=user2, action=view_page, duration=75, status=SUCCESS)
+        //      ],
+        //    user3=[
+        //      LogEntry(timestamp=2024-01-15 10:03:00, userId=user3, action=login, duration=500, status=FAILED),
+        //      LogEntry(timestamp=2024-01-15 10:06:00, userId=user3, action=login, duration=300, status=SUCCESS)
+        //      ]
+        // }
+
+        val mostFrequentActionPerUser: Map<String, String> = logs.groupBy { it.userId }
+            .mapValues { (_, userLogs) ->
+                userLogs.groupingBy { it.action }
+                    .eachCount()
+                    .maxByOrNull { it.value }
+                    ?.key ?: "N/A"
+            }
+        println(mostFrequentActionPerUser)
+        //{user1=login, user2=login, user3=login}
+
+    }
+
+    //TODO - Задача 3: Анализ продаж
+}
+
+
+// Большой набор данных
+val largeEmployeeList: List<Employee> = (1..1_000_000).map {
+    Employee(name = "Employee$it", department = "Dept${it % 100}", salary = 1000 + it % 5000)
 }
 
 // Sequence может работать с бесконечными данными
@@ -400,3 +705,50 @@ data class EmployeeStats(
 ) {
     val averageSalary get() = totalSalary.toDouble() / count
 }
+
+data class Order(val id: Int, val customer: String, val amount: Double, val category: String)
+
+val orders = listOf(
+    Order(1, "Alice", 100.0, "Electronics"),
+    Order(2, "Bob", 50.0, "Books"),
+    Order(3, "Alice", 75.0, "Books"),
+    Order(4, "Charlie", 200.0, "Electronics"),
+    Order(5, "Bob", 150.0, "Electronics")
+)
+
+data class Transaction(
+    val id: Int,
+    val customer: String,
+    val amount: Double,
+    val category: String,
+    val city: String,
+    val date: String,
+)
+
+val transactions = listOf(
+    Transaction(1, "Alice", 150.0, "Electronics", "New York", "2024-01-15"),
+    Transaction(2, "Bob", 75.0, "Food", "Boston", "2024-01-15"),
+    Transaction(3, "Alice", 200.0, "Clothing", "New York", "2024-01-16"),
+    Transaction(4, "Charlie", 300.0, "Electronics", "Boston", "2024-01-16"),
+    Transaction(5, "Bob", 50.0, "Food", "Boston", "2024-01-17"),
+    Transaction(6, "Alice", 100.0, "Electronics", "New York", "2024-01-17"),
+    Transaction(7, "David", 250.0, "Clothing", "Chicago", "2024-01-17")
+)
+
+data class LogEntry(
+    val timestamp: String,
+    val userId: String,
+    val action: String,
+    val duration: Int, // milliseconds
+    val status: String,
+)
+
+val logs = listOf(
+    LogEntry("2024-01-15 10:00:00", "user1", "login", 150, "SUCCESS"),
+    LogEntry("2024-01-15 10:01:00", "user2", "login", 200, "SUCCESS"),
+    LogEntry("2024-01-15 10:02:00", "user1", "view_page", 50, "SUCCESS"),
+    LogEntry("2024-01-15 10:03:00", "user3", "login", 500, "FAILED"),
+    LogEntry("2024-01-15 10:04:00", "user2", "view_page", 75, "SUCCESS"),
+    LogEntry("2024-01-15 10:05:00", "user1", "logout", 100, "SUCCESS"),
+    LogEntry("2024-01-15 10:06:00", "user3", "login", 300, "SUCCESS")
+)

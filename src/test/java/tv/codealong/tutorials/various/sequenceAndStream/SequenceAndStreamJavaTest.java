@@ -14,6 +14,16 @@ import static tv.codealong.tutorials.various.sequenceAndStream.SequenceAndStream
  * ⚡ Ключевое отличие: Lazy vs Eager Evaluation
  * Stream - ленивые операции, но создает новый Stream на каждом шаге
  * Sequence - полностью ленивые вычисления, обрабатывает элементы по одному
+ * <p>
+ * 🚀 Полезные методы для группировки
+ * Java Collectors:
+ * groupingBy() - основная группировка
+ * counting() - подсчет элементов
+ * summingInt/Long/Double() - суммирование
+ * averagingInt/Long/Double() - среднее значение
+ * maxBy()/minBy() - максимум/минимум
+ * mapping() - преобразование значений
+ * reducing() - кастомная агрегация
  */
 public class SequenceAndStreamJavaTest {
     @Test
@@ -151,9 +161,9 @@ public class SequenceAndStreamJavaTest {
 
     @Test
     @DisplayName("4. Многоуровневая группировка")
-    public void  testMultiLevelGrouping(){
+    public void testMultiLevelGrouping() {
         // Группировка по отделу, а затем по диапазону зарплат
-        Map<String, Map<String, List<Employee>>> multiLevel  = getEmployees().stream()
+        Map<String, Map<String, List<Employee>>> multiLevel = getEmployees().stream()
                 .collect(Collectors.groupingBy(
                         // Группировка по отделу - это ключ во внешнем Map
                         Employee::getDepartment,
@@ -193,7 +203,7 @@ public class SequenceAndStreamJavaTest {
     @DisplayName("5. Группировка с фильтрацией")
     public void testSimpleGrouping7() {
         // Группировка только высокооплачиваемых сотрудников
-        Map<String, List<Employee>> highEarnersByDept  = getEmployees().stream()
+        Map<String, List<Employee>> highEarnersByDept = getEmployees().stream()
                 .filter(e -> e.getSalary() > 5000)
                 .collect(Collectors.groupingBy(Employee::getDepartment));
 
