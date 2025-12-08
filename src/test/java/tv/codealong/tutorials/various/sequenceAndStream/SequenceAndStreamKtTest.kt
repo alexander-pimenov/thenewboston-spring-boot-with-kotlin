@@ -667,9 +667,159 @@ class SequenceAndStreamKtTest {
 
     }
 
-    //TODO - Задача 3: Анализ продаж
+    @Test
+    @DisplayName("Задача 3: Анализ продаж: Найти общую выручку по регионам")
+    fun testTask7() {
+        val revenueByRegion: Map<String, Double> = sales.groupBy { it.region }
+            .mapValues { (_, regionSales) ->
+                regionSales.sumOf { it.price * it.quantity }
+            }
+        println(revenueByRegion)
+        //{North=2250.0, South=500.0, East=4900.0, West=250.0}
+    }
+
+    @Test
+    @DisplayName("Задача 3: Анализ продаж: Найти лучшего продавца в каждой категории")
+    fun testTask8() {
+
+        val bestSellerByCategory: Map<String, String> = sales
+            .groupBy { it.category }
+            .mapValues { (_, categorySales) -> //тут List<Sale>
+                categorySales.groupBy { it.seller }
+                    .mapValues { (_, sellerSales) -> //тут List<Sale>
+                        sellerSales.sumOf { it.price * it.quantity }
+                    }
+                    .maxByOrNull { it.value }?.key ?: "N/A"
+            }
+        println(bestSellerByCategory)
+        //{Electronics=Bob, Education=Alice}
+    }
+
+    @Test
+    @DisplayName("Задача 3: Анализ продаж: Найти продукты, которые продавались в количестве больше 10 штук")
+    fun testTask9() {
+
+        val popularProducts: List<String> = sales
+            .filter { it.quantity > 10 }
+            .map { it.product }
+            .distinct()
+            .sorted()
+            .toList()
+        println(popularProducts)
+        //[Book, Notebook, Pen]
+    }
+
+    @Test
+    @DisplayName(" Задача 4: Сложная аналитика: Найти категории, где средняя цена товара выше 100")
+    fun testTask10() {
+
+        val expensiveCategories: List<String> = sales
+            .groupBy { it.category }
+            .mapValues { (_, categorySales) -> //тут List<Sale>
+                categorySales.map { it.price }.average()
+            }
+            .filter { it.value > 100 }
+            .map { it.key }
+        println(expensiveCategories)
+        //[Electronics]
+
+        val stringDoubleMap = sales
+            .groupBy { it.category }
+            .mapValues { (_, categorySales) -> //тут List<Sale>
+                categorySales.map { it.price }.average()
+            }
+        println(stringDoubleMap)
+        //{Electronics=456.25, Education=7.333333333333333}
+    }
+
+    @Test
+    @DisplayName(" Задача 4: Сложная аналитика: Найти регионы, где продавцы продали более 2 различных продуктов")
+    fun testTask11() {
+
+        val diverseRegions: List<String> = sales
+            .groupBy { it.region }
+            .mapValues { (_, regionSales) ->
+                regionSales.distinctBy { it.product }.size
+            }
+            .filter { it.value > 2 }
+            .map { it.key }
+            .toList()
+        println(diverseRegions)
+        //[North]
+
+    }
+
+    @Test
+    @DisplayName(" Задача 4: Сложная аналитика: Рейтинг продавцов по общей выручке")
+    fun testTask12() {
+
+        val sellerRanking: List<Pair<String, Double>> = sales
+            .groupingBy { it.seller }
+            .aggregate { key, accumulator: Double?, sale, first ->
+                val revenue = sale.price * sale.quantity //доход
+                if (first) revenue else accumulator!! + revenue
+            }
+            .entries.sortedByDescending { it.value }
+            .map { it.key to it.value }
+        println(sellerRanking)
+        //список пар:
+        //[(Bob, 4900.0), (John, 2500.0), (Alice, 500.0), (Charlie, 250.0)]
+
+        val sortedByDescending: List<Map.Entry<String, Double>> = sales
+            .groupingBy { it.seller }
+            .aggregate { key, accumulator: Double?, sale, first ->
+                val revenue = sale.price * sale.quantity //доход
+                if (first) revenue else accumulator!! + revenue
+            }
+            .entries.sortedByDescending { it.value }
+        println(sortedByDescending)
+        //список Map.Entry:
+        //[Bob=4900.0, John=2500.0, Alice=500.0, Charlie=250.0]
+
+    }
+
+    @Test
+    @DisplayName(" Задача 5: Вложенная группировка: Группировка по региону -> продавец -> категория")
+    fun testTask13() {
+
+        val nestedGrouping: Map<String, Map<String, Map<String, Double>>> = sales
+            .groupBy { it.region }
+            .mapValues { (_, regionSales) -> //тут List<Sale>
+                regionSales.groupBy { it.seller }
+                    .mapValues { (_, sellerSales) -> //тут List<Sale>
+                        sellerSales.groupBy { it.category }
+                            .mapValues { (_, categorySales) -> //тут List<Sale>
+                                categorySales.sumOf { it.price * it.quantity }
+                            }
+                    }
+            }
+        println(nestedGrouping)
+        //{North={John={Electronics=2250.0, Clothes=250.0}},
+        // South={Alice={Education=500.0}},
+        // East={Bob={Electronics=4900.0}},
+        // West={Charlie={Education=250.0}}}
+
+    }
+
+    @Test
+    @DisplayName(" Задача 6: Анализ временных промежутков")
+    fun testTask14() {
+        val intervalMillis = 5 * 60 * 1000L // 5 minutes in milliseconds
+
+        val eventsBy5MinIntervals: Map<Long, Int> = events
+            .groupBy { it.timestamp / intervalMillis }
+            .mapValues { it.value.size }
+
+        println(eventsBy5MinIntervals)
+        //{5884064=228, 5884063=300, 5884062=300, 5884061=172}
+    }
 }
 
+val events = (1..1000).map {
+    Event("event_${it % 50}", System.currentTimeMillis() - (it * 1000), "user_${it % 100}")
+}.asSequence()
+
+data class Event(val name: String, val timestamp: Long, val userId: String)
 
 // Большой набор данных
 val largeEmployeeList: List<Employee> = (1..1_000_000).map {
@@ -751,4 +901,24 @@ val logs = listOf(
     LogEntry("2024-01-15 10:04:00", "user2", "view_page", 75, "SUCCESS"),
     LogEntry("2024-01-15 10:05:00", "user1", "logout", 100, "SUCCESS"),
     LogEntry("2024-01-15 10:06:00", "user3", "login", 300, "SUCCESS")
+)
+
+data class Sale(
+    val product: String,
+    val category: String,
+    val price: Double,
+    val quantity: Int,
+    val seller: String,
+    val region: String,
+)
+
+val sales = listOf(
+    Sale("Laptop", "Electronics", 1000.0, 2, "John", "North"),
+    Sale("Mouse", "Electronics", 25.0, 10, "John", "North"),
+    Sale("Cap", "Clothes", 5.0, 50, "John", "North"),
+    Sale("Book", "Education", 15.0, 20, "Alice", "South"),
+    Sale("Pen", "Education", 2.0, 100, "Alice", "South"),
+    Sale("Phone", "Electronics", 500.0, 5, "Bob", "East"),
+    Sale("Tablet", "Electronics", 300.0, 8, "Bob", "East"),
+    Sale("Notebook", "Education", 5.0, 50, "Charlie", "West")
 )
