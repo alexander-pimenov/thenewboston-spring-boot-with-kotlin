@@ -1,4 +1,4 @@
-package tv.codealong.tutorials.various.yandex.test7_1_algo
+package tv.codealong.tutorials.various.yandex.test7_1_algorythms
 
 /**
  * Ссылка - https://education.yandex.ru/handbook/algorithms/article/odnosvyaznyj-spisok

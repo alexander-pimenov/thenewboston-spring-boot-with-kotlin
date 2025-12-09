@@ -1,6 +1,4 @@
-package tv.codealong.tutorials.various.yandex.test7_1_algo
-
-import kotlin.test.assertTrue
+package tv.codealong.tutorials.various.yandex.test7_1_algorythms
 
 fun findMinMaxDifferencePairs(a: IntArray): Pair<Pair<Int, Int>, Pair<Int, Int>> {
     val n = a.size

@@ -1,4 +1,4 @@
-package tv.codealong.tutorials.various.yandex.test7_1_algo
+package tv.codealong.tutorials.various.yandex.test7_1_algorythms
 
 import java.util.Scanner
 
