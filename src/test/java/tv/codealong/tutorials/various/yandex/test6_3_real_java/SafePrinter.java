@@ -1,4 +1,4 @@
-package tv.codealong.tutorials.various.yandex.test6_3_real;
+package tv.codealong.tutorials.various.yandex.test6_3_real_java;
 
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;

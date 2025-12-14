@@ -1,4 +1,4 @@
-package tv.codealong.tutorials.various.yandex.test6_3_real;
+package tv.codealong.tutorials.various.yandex.test6_4_real_java_with_record;
 
 
 import java.math.BigDecimal;
@@ -82,15 +82,15 @@ public class MainExample {
 
         System.out.println("\nКорзина со скидкой:");
         SafePrinter.println("\nКорзина со скидкой:");
-        for (Purchase purchase : discountedCart.getPurchases()) {
+        for (Purchase purchase : discountedCart.purchases()) {
             System.out.printf("Товар: %s, Оригинальная цена: %.2f, Цена со скидкой: %.2f%n",
-                    purchase.getProductId(),
-                    purchase.getOriginalPrice(),
-                    purchase.getFinalPrice());
+                    purchase.productId(),
+                    purchase.originalPrice(),
+                    purchase.finalPrice());
             SafePrinter.printf("Товар: %s, Оригинальная цена: %.2f, Цена со скидкой: %.2f%n",
-                    purchase.getProductId(),
-                    purchase.getOriginalPrice(),
-                    purchase.getFinalPrice());
+                    purchase.productId(),
+                    purchase.originalPrice(),
+                    purchase.finalPrice());
         }
 
         System.out.println("Общая стоимость со скидкой: " + discountedCart.calculateTotalFinalPrice());

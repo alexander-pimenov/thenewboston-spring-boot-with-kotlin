@@ -1,4 +1,4 @@
-package tv.codealong.tutorials.various.yandex.test6_3_real;
+package tv.codealong.tutorials.various.yandex.test6_4_real_java_with_record;
 
 import java.util.Optional;
 

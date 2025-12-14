@@ -1,4 +1,4 @@
-package tv.codealong.tutorials.various.yandex.test6_3_real;
+package tv.codealong.tutorials.various.yandex.test6_4_real_java_with_record;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,19 +43,19 @@ class LoyaltyServiceTest {
         ShoppingCart result = loyaltyService.applyDiscount(customerId, cart);
 
         // Assert
-        assertEquals(2, result.getPurchases().size());
+        assertEquals(2, result.purchases().size());
 
         // Проверяем скидку на первый товар: 100 - 10% = 90
         assertEquals(BigDecimal.valueOf(90.00).setScale(2),
-                result.getPurchases().get(0).getFinalPrice());
+                result.purchases().get(0).finalPrice().setScale(2));
 
         // Проверяем скидку на второй товар: 50 - 10% = 45
         assertEquals(BigDecimal.valueOf(45.00).setScale(2),
-                result.getPurchases().get(1).getFinalPrice());
+                result.purchases().get(1).finalPrice());
 
         // Проверяем что оригинальные цены не изменились
         assertEquals(BigDecimal.valueOf(100.00).setScale(2),
-                result.getPurchases().get(0).getOriginalPrice().setScale(2));
+                result.purchases().get(0).originalPrice().setScale(2));
     }
 
     @Test
@@ -73,7 +73,7 @@ class LoyaltyServiceTest {
 
         // Assert
         assertEquals(BigDecimal.valueOf(100.00).setScale(2),
-                result.getPurchases().get(0).getFinalPrice());
+                result.purchases().get(0).finalPrice().setScale(2));
     }
 
     @Test
@@ -92,7 +92,7 @@ class LoyaltyServiceTest {
 
         // Assert
         assertEquals(BigDecimal.ZERO.setScale(2),
-                result.getPurchases().get(0).getFinalPrice());
+                result.purchases().get(0).finalPrice().setScale(2));
     }
 
     @Test
@@ -129,7 +129,7 @@ class LoyaltyServiceTest {
 
         // Assert
         // Общая стоимость: 150, скидка 20% = 30
-        assertEquals(BigDecimal.valueOf(30.00), totalDiscount);
+        assertEquals(BigDecimal.valueOf(30.00).setScale(2), totalDiscount.setScale(2));
     }
 
     @Test
@@ -150,9 +150,9 @@ class LoyaltyServiceTest {
         ShoppingCart result = loyaltyService.applyDiscount(customerId, cart);
 
         // Assert
-        assertEquals("product-1", result.getPurchases().get(0).getProductId());
-        assertEquals("product-2", result.getPurchases().get(1).getProductId());
-        assertEquals("product-3", result.getPurchases().get(2).getProductId());
+        assertEquals("product-1", result.purchases().get(0).productId());
+        assertEquals("product-2", result.purchases().get(1).productId());
+        assertEquals("product-3", result.purchases().get(2).productId());
     }
 
 }

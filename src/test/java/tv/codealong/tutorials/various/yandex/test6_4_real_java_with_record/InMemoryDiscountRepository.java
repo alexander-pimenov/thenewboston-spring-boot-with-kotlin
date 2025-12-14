@@ -1,4 +1,4 @@
-package tv.codealong.tutorials.various.yandex.test6_3_real;
+package tv.codealong.tutorials.various.yandex.test6_4_real_java_with_record;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,7 +27,7 @@ public class InMemoryDiscountRepository implements DiscountRepository {
     }
 
     public void addDiscount(Discount discount) {
-        discounts.put(discount.getCustomerId(), discount);
+        discounts.put(discount.customerId(), discount);
     }
 
     @Override
