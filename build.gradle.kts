@@ -13,12 +13,13 @@ plugins {
 
 group = "tv.codealong.tutorials.springboot"
 version = "0.0.1-SNAPSHOT"
+description = "Demo project for Spring Boot and Kotlin and other interesting stuff"
 
-//java {
-//    toolchain {
-//        languageVersion = JavaLanguageVersion.of(21)
-//    }
-//}
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
 
 java {
     sourceCompatibility = JavaVersion.VERSION_21

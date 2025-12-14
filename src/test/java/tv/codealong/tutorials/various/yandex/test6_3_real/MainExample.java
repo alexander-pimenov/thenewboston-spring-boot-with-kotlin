@@ -35,6 +35,26 @@ import java.util.Arrays;
  */
 public class MainExample {
     public static void main(String[] args) {
+        // Диагностика кодировок (исправленная версия)
+        System.out.println("=== ДИАГНОСТИКА КОДИРОВОК ===");
+        System.out.println("Default charset: " + java.nio.charset.Charset.defaultCharset());
+        System.out.println("File encoding property: " + System.getProperty("file.encoding"));
+        System.out.println("Sun.stdout.encoding: " + System.getProperty("sun.stdout.encoding"));
+        System.out.println("Sun.jnu.encoding: " + System.getProperty("sun.jnu.encoding"));
+
+        // Безопасная проверка консоли
+        java.io.Console console = System.console();
+        if (console != null) {
+            System.out.println("Console charset: " + console.charset());
+        } else {
+            System.out.println("Console: null (running in IDE or redirected output)");
+        }
+
+        System.out.println("Test русских символов: привет мир!");
+        System.out.println("Test special chars: € £ ¥ §");
+        System.out.println("=================================\n");
+
+
         // Создаем репозиторий со скидками
         DiscountRepository discountRepository = new InMemoryDiscountRepository();
 
@@ -53,23 +73,32 @@ public class MainExample {
                 Arrays.asList(laptop, mouse, keyboard));
 
         System.out.println("Оригинальная корзина:");
+        SafePrinter.println("Оригинальная корзина:");
         System.out.println("Общая стоимость: " + cart.calculateTotalOriginalPrice());
+        SafePrinter.println("Общая стоимость: " + cart.calculateTotalOriginalPrice());
 
         // Применяем скидку
         ShoppingCart discountedCart = loyaltyService.applyDiscount(customerId, cart);
 
         System.out.println("\nКорзина со скидкой:");
+        SafePrinter.println("\nКорзина со скидкой:");
         for (Purchase purchase : discountedCart.getPurchases()) {
             System.out.printf("Товар: %s, Оригинальная цена: %.2f, Цена со скидкой: %.2f%n",
+                    purchase.getProductId(),
+                    purchase.getOriginalPrice(),
+                    purchase.getFinalPrice());
+            SafePrinter.printf("Товар: %s, Оригинальная цена: %.2f, Цена со скидкой: %.2f%n",
                     purchase.getProductId(),
                     purchase.getOriginalPrice(),
                     purchase.getFinalPrice());
         }
 
         System.out.println("Общая стоимость со скидкой: " + discountedCart.calculateTotalFinalPrice());
+        SafePrinter.println("Общая стоимость со скидкой: " + discountedCart.calculateTotalFinalPrice());
 
         // Рассчитываем общую скидку
         BigDecimal totalDiscount = loyaltyService.calculateTotalDiscount(customerId, cart);
         System.out.println("Общая скидка: " + totalDiscount);
+        SafePrinter.println("Общая скидка: " + totalDiscount);
     }
 }
