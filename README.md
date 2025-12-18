@@ -24,3 +24,12 @@ Theese additional references should also help you:
 
 * [Gradle Build Scans - insights for your]()
 
+### 5. Доступ к H2 Console:
+После запуска приложения откройте: http://localhost:8080/h2-console
+
+JDBC URL: jdbc:h2:mem:testdb
+
+Username: sa
+
+Password: (оставьте пустым)
+

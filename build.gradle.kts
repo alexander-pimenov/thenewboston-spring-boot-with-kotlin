@@ -96,8 +96,21 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-//    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    //JWT (Spring Security)
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+    implementation("com.nimbusds:nimbus-jose-jwt")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+
+    // Для генерации JWT токенов (если нужно создавать токены)
+    implementation("io.jsonwebtoken:jjwt-api:0.12.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.5")
+
+
+    //MapStruct
+    implementation("org.mapstruct:mapstruct:1.5.5.Final")
+    implementation("org.mapstruct:mapstruct-processor:1.5.5.Final")
 
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
     runtimeOnly("org.jetbrains.kotlin:kotlin-bom")
@@ -108,6 +121,11 @@ dependencies {
     compileOnly("org.projectlombok:lombok")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     runtimeOnly("com.h2database:h2")
+    //        <dependency>
+    //            <groupId>com.h2database</groupId>
+    //            <artifactId>h2</artifactId>
+    //            <scope>runtime</scope>
+    //        </dependency>
     annotationProcessor("org.projectlombok:lombok")
 
     //
@@ -116,6 +134,7 @@ dependencies {
     //если без плагина
     implementation("org.openjdk.jmh:jmh-core:1.37")
     annotationProcessor("org.openjdk.jmh:jmh-generator-annprocess:1.37")
+
 
     testImplementation("org.openjdk.jmh:jmh-core:1.37")
     testAnnotationProcessor("org.openjdk.jmh:jmh-generator-annprocess:1.37")
@@ -136,6 +155,7 @@ dependencies {
     testImplementation("io.ktor:ktor-client-content-negotiation:2.3.4")
     testImplementation("io.ktor:ktor-serialization-kotlinx-json:2.3.4")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-security-test")
     testImplementation("io.mockk:mockk:${mockkVersion}")
     testImplementation("com.ninja-squad:springmockk:${springmockkVersion}")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
