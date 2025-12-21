@@ -39,7 +39,7 @@ data class RestPropertiesBuilder(
     }
 }
 
-
+@ConfigurationProperties
 data class RestProperties(
     val url: String,
     val circuitBreaker: CircuitBreakerConfiguration,

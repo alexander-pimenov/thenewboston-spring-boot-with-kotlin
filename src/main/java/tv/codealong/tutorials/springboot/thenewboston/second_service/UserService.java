@@ -1,4 +1,4 @@
-package tv.codealong.tutorials.two;
+package tv.codealong.tutorials.springboot.thenewboston.second_service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -17,7 +17,7 @@ public class UserService {
 
     public User createUser(CreateUserRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new UserAlreadyExistsException("User with email already exists");
+            throw new UserAlreadyExistsException(String.format("User with email: %s already exists", request.getEmail()));
         }
 
         User user = User.builder()
@@ -35,7 +35,7 @@ public class UserService {
 
     public User getUserById(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(String.format("User with id=%s not found", id)));
     }
 
     public List<User> getActiveUsers() {

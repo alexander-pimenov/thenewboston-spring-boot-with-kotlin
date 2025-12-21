@@ -1,4 +1,4 @@
-package tv.codealong.tutorials.two;
+package tv.codealong.tutorials.springboot.thenewboston.second_service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

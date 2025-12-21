@@ -1008,3 +1008,1028 @@ void methodName_scenario_expectedResult() {
 
 ```
 
+Конечно! Дополню реализации всех недостающих классов и укажу зависимости. 
+
+## **1. Зависимости в `pom.xml`**
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.4</version>
+    </parent>
+    
+    <groupId>com.example</groupId>
+    <artifactId>demo</artifactId>
+    <version>1.0.0</version>
+    
+    <properties>
+        <java.version>17</java.version>
+    </properties>
+    
+    <dependencies>
+        <!-- Spring Boot Starters -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        
+        <!-- Database -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        
+        <!-- JWT (Spring Security) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+        </dependency>
+        
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+        
+        <!-- MapStruct -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <version>1.5.5.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct-processor</artifactId>
+            <version>1.5.5.Final</version>
+            <scope>provided</scope>
+        </dependency>
+        
+        <!-- Test Dependencies -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+```
+
+**Ответ по JWT**: Да, `NimbusJwtDecoder` и `JwtDecoder` из библиотеки Spring Security OAuth2 Resource Server. Они используются для работы с JWT токенами.
+
+## **2. Entity Classes**
+
+### **User.java**
+```java
+package com.example.demo.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "users")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@ToString
+public class User {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(unique = true, nullable = false)
+    private String email;
+    
+    @Column(name = "password_hash", nullable = false)
+    private String passwordHash;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private UserStatus status = UserStatus.ACTIVE;
+    
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+    
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+    
+    // Метод для обновления builder
+    public UserBuilder toBuilder() {
+        return User.builder()
+            .id(this.id)
+            .email(this.email)
+            .passwordHash(this.passwordHash)
+            .status(this.status)
+            .createdAt(this.createdAt)
+            .updatedAt(this.updatedAt);
+    }
+}
+```
+
+### **UserStatus.java**
+```java
+package com.example.demo.entity;
+
+public enum UserStatus {
+    ACTIVE,
+    INACTIVE,
+    SUSPENDED,
+    DELETED
+}
+```
+
+## **3. DTO Classes**
+
+### **CreateUserRequest.java**
+```java
+package com.example.demo.dto.request;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class CreateUserRequest {
+    
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email should be valid")
+    private String email;
+    
+    @NotBlank(message = "Password is required")
+    @Size(min = 8, message = "Password must be at least 8 characters long")
+    private String password;
+}
+```
+
+### **UserResponse.java**
+```java
+package com.example.demo.dto.response;
+
+import com.example.demo.entity.UserStatus;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserResponse {
+    private Long id;
+    private String email;
+    private UserStatus status;
+}
+```
+
+### **PageResponse.java**
+```java
+package com.example.demo.dto.response;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class PageResponse<T> {
+    private List<T> content;
+    private int page;
+    private int size;
+    private long totalElements;
+    private int totalPages;
+    private boolean last;
+}
+```
+
+## **4. Mapper Class (MapStruct)**
+
+### **UserMapper.java**
+```java
+package com.example.demo.mapper;
+
+import com.example.demo.dto.response.UserResponse;
+import com.example.demo.entity.User;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.springframework.data.domain.Page;
+
+import java.util.List;
+
+@Mapper(componentModel = "spring")
+public interface UserMapper {
+    
+    UserResponse toResponse(User user);
+    
+    List<UserResponse> toResponseList(List<User> users);
+    
+    default PageResponse<UserResponse> toPageResponse(Page<User> page) {
+        return new PageResponse<>(
+            toResponseList(page.getContent()),
+            page.getNumber(),
+            page.getSize(),
+            page.getTotalElements(),
+            page.getTotalPages(),
+            page.isLast()
+        );
+    }
+}
+```
+
+## **5. Repository Interface**
+
+### **UserRepository.java**
+```java
+package com.example.demo.repository;
+
+import com.example.demo.entity.User;
+import com.example.demo.entity.UserStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+    
+    Optional<User> findByEmail(String email);
+    
+    boolean existsByEmail(String email);
+    
+    List<User> findByStatus(UserStatus status);
+    
+    Page<User> findByStatus(UserStatus status, Pageable pageable);
+    
+    @Query("SELECT u FROM User u WHERE u.createdAt BETWEEN :startDate AND :endDate")
+    List<User> findByCreatedAtBetween(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
+    
+    @Query("SELECT u FROM User u WHERE " +
+           "(:status IS NULL OR u.status = :status) AND " +
+           "(:email IS NULL OR u.email LIKE %:email%)")
+    Page<User> findUsers(
+            @Param("status") UserStatus status,
+            @Param("email") String email,
+            Pageable pageable);
+    
+    default Page<User> getUsers(int page, int size, UserStatus status) {
+        return findUsers(status, null, PageRequest.of(page, size, Sort.by("createdAt").descending()));
+    }
+}
+```
+
+## **6. Service Interfaces**
+
+### **EmailService.java**
+```java
+package com.example.demo.service;
+
+public interface EmailService {
+    void sendWelcomeEmail(String email);
+    void sendPasswordResetEmail(String email, String token);
+    void sendNotification(String email, String subject, String message);
+}
+```
+
+### **EmailServiceImpl.java**
+```java
+package com.example.demo.service.impl;
+
+import com.example.demo.service.EmailService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+@Slf4j
+@Service
+public class EmailServiceImpl implements EmailService {
+    
+    @Override
+    public void sendWelcomeEmail(String email) {
+        log.info("Sending welcome email to: {}", email);
+        // Реальная реализация отправки email
+        // mailSender.send(...)
+    }
+    
+    @Override
+    public void sendPasswordResetEmail(String email, String token) {
+        log.info("Sending password reset email to: {} with token: {}", email, token);
+    }
+    
+    @Override
+    public void sendNotification(String email, String subject, String message) {
+        log.info("Sending notification to: {}, subject: {}, message: {}", email, subject, message);
+    }
+}
+```
+
+## **7. Configuration Classes**
+
+### **PasswordEncoder Configuration**
+```java
+package com.example.demo.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+@Configuration
+public class SecurityConfig {
+    
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+}
+```
+
+### **ValidationConfig.java** (если нужны кастомные валидаторы)
+```java
+package com.example.demo.config;
+
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class ValidationConfig {
+    // Конфигурация валидации
+}
+```
+
+## **8. Exception Classes**
+
+### **UserAlreadyExistsException.java**
+```java
+package com.example.demo.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+@ResponseStatus(HttpStatus.CONFLICT)
+public class UserAlreadyExistsException extends RuntimeException {
+    public UserAlreadyExistsException(String message) {
+        super(message);
+    }
+}
+```
+
+### **UserNotFoundException.java**
+```java
+package com.example.demo.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+@ResponseStatus(HttpStatus.NOT_FOUND)
+public class UserNotFoundException extends RuntimeException {
+    public UserNotFoundException(String message) {
+        super(message);
+    }
+}
+```
+
+### **InvalidDateException.java**
+```java
+package com.example.demo.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+@ResponseStatus(HttpStatus.BAD_REQUEST)
+public class InvalidDateException extends RuntimeException {
+    public InvalidDateException(String message) {
+        super(message);
+    }
+}
+```
+
+## **9. Test Configuration**
+
+### **TestConfig.java**
+```java
+package com.example.demo.config;
+
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import static org.mockito.Mockito.mock;
+
+@TestConfiguration
+public class TestConfig {
+    
+    @Bean
+    public PasswordEncoder testPasswordEncoder() {
+        return mock(PasswordEncoder.class);
+    }
+}
+```
+
+## **10. Application Properties**
+
+### **application.yml**
+```yaml
+spring:
+  application:
+    name: demo-app
+    
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+    
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+logging:
+  level:
+    com.example.demo: DEBUG
+    org.springframework.security: DEBUG
+
+app:
+  jwt:
+    secret: my-super-secret-key-that-is-at-least-32-characters-long
+    expiration-ms: 86400000 # 24 hours
+    issuer: demo-app
+    allowed-audiences: web,mobile
+```
+
+## **11. Main Application Class**
+
+### **DemoApplication.java**
+```java
+package com.example.demo;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class DemoApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(DemoApplication.class, args);
+    }
+}
+```
+
+## **Как запустить проект:**
+
+### **1. Сборка проекта:**
+```bash
+mvn clean install
+```
+
+### **2. Запуск тестов:**
+```bash
+mvn test
+```
+
+### **3. Запуск отдельных тестов:**
+```bash
+# Все тесты
+mvn test
+
+# Конкретный тестовый класс
+mvn test -Dtest=UserServiceTest
+
+# Конкретный метод теста
+mvn test -Dtest=UserServiceTest#createUser_withValidRequest_returnsSavedUser
+```
+
+### **4. Запуск приложения:**
+```bash
+mvn spring-boot:run
+```
+
+### **5. Доступ к H2 Console:**
+После запуска приложения откройте: http://localhost:8080/h2-console
+- JDBC URL: `jdbc:h2:mem:testdb`
+- Username: `sa`
+- Password: (оставьте пустым)
+
+## **Структура проекта:**
+```
+src/
+├── main/
+│   ├── java/
+│   │   └── com/example/demo/
+│   │       ├── DemoApplication.java
+│   │       ├── config/
+│   │       ├── controller/
+│   │       ├── dto/
+│   │       ├── entity/
+│   │       ├── exception/
+│   │       ├── mapper/
+│   │       ├── repository/
+│   │       ├── service/
+│   │       └── util/
+│   └── resources/
+│       ├── application.yml
+│       └── data.sql (опционально)
+└── test/
+    └── java/
+        └── com/example/demo/
+            ├── config/
+            ├── controller/
+            ├── repository/
+            ├── service/
+            └── util/
+```
+
+## **Если нужны дополнительные зависимости для JWT:**
+
+### **Добавить в pom.xml:**
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+</dependency>
+<dependency>
+    <groupId>com.nimbusds</groupId>
+    <artifactId>nimbus-jose-jwt</artifactId>
+</dependency>
+```
+
+## **Краткое пояснение по JWT классам:**
+
+1. **JwtDecoder** - интерфейс Spring Security для декодирования JWT токенов
+2. **NimbusJwtDecoder** - реализация от Nimbus JOSE + JWT библиотеки
+3. **Keys** - утилитный класс для создания ключей
+
+Теперь у вас есть полный рабочий проект Spring Boot с тестами! Все тесты должны успешно выполняться.
+
+```
+
+Для метода с `Keys.hmacShaKeyFor()` и `NimbusJwtDecoder` нужны следующие зависимости:
+
+## **Обновленный `pom.xml` с JWT:**
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.4</version>
+    </parent>
+    
+    <groupId>com.example</groupId>
+    <artifactId>demo</artifactId>
+    <version>1.0.0</version>
+    
+    <properties>
+        <java.version>17</java.version>
+    </properties>
+    
+    <dependencies>
+        <!-- Spring Boot Starters -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        
+        <!-- Spring Security JWT (OAuth2 Resource Server) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+        </dependency>
+        
+        <!-- Database -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+        
+        <!-- MapStruct -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <version>1.5.5.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct-processor</artifactId>
+            <version>1.5.5.Final</version>
+            <scope>provided</scope>
+        </dependency>
+        
+        <!-- Test Dependencies -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+```
+
+## **2. Импорты для JwtConfig.java:**
+
+```java
+package com.example.demo.config;
+
+import javax.crypto.SecretKey;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.validation.annotation.Validated;
+
+import io.jsonwebtoken.security.Keys;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+
+@Configuration
+@ConfigurationProperties(prefix = "app.jwt")
+@Data
+@Validated
+public class JwtConfig {
+    
+    @NotBlank
+    private String secret;
+    
+    @Min(1)
+    private long expirationMs;
+    
+    @NotBlank
+    private String issuer;
+    
+    @NotNull
+    private List<String> allowedAudiences;
+    
+    @Bean
+    public JwtDecoder jwtDecoder() {
+        // Keys из io.jsonwebtoken:jjwt-api
+        // SecretKey из javax.crypto
+        SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        return NimbusJwtDecoder.withSecretKey(key).build();
+    }
+}
+```
+
+## **3. Если нужна ручная работа с JWT (генерация токенов), добавьте:**
+
+```xml
+<!-- Для генерации JWT токенов (если нужно создавать токены) -->
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-api</artifactId>
+    <version>0.12.5</version>
+</dependency>
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-impl</artifactId>
+    <version>0.12.5</version>
+    <scope>runtime</scope>
+</dependency>
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-jackson</artifactId>
+    <version>0.12.5</version>
+    <scope>runtime</scope>
+</dependency>
+```
+
+## **4. Альтернативный вариант JwtConfig (без jjwt):**
+
+Если хотите использовать только Spring Security без дополнительных зависимостей:
+
+```java
+package com.example.demo.config;
+
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.validation.annotation.Validated;
+
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+
+@Configuration
+@ConfigurationProperties(prefix = "app.jwt")
+@Data
+@Validated
+public class JwtConfig {
+    
+    @NotBlank
+    private String secret;
+    
+    @Min(1)
+    private long expirationMs;
+    
+    @NotBlank
+    private String issuer;
+    
+    @NotNull
+    private List<String> allowedAudiences;
+    
+    @Bean
+    public JwtDecoder jwtDecoder() {
+        // Создаем SecretKey без зависимости от jjwt
+        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
+        
+        // Используем SHA-256 для HMAC
+        SecretKey key = new SecretKeySpec(keyBytes, "HmacSHA256");
+        
+        return NimbusJwtDecoder.withSecretKey(key).build();
+    }
+}
+```
+
+## **5. Проверка импортов:**
+
+Убедитесь, что в классе `JwtConfig` есть правильные импорты:
+
+```java
+// Для Spring Security JWT
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+
+// Для SecretKey (вариант 1 - с jjwt)
+import io.jsonwebtoken.security.Keys;
+import javax.crypto.SecretKey;
+
+// ИЛИ (вариант 2 - без jjwt)
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+
+// Для работы с байтами
+import java.nio.charset.StandardCharsets;
+```
+
+## **6. Тест для JwtConfig:**
+
+```java
+package com.example.demo.config;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.test.context.TestPropertySource;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SpringBootTest
+@TestPropertySource(properties = {
+    "app.jwt.secret=my-super-secret-key-that-is-at-least-32-characters-long",
+    "app.jwt.expiration-ms=86400000",
+    "app.jwt.issuer=demo-app",
+    "app.jwt.allowed-audiences=web,mobile"
+})
+class JwtConfigTest {
+    
+    @Autowired
+    private JwtConfig jwtConfig;
+    
+    @Autowired
+    private JwtDecoder jwtDecoder;
+    
+    @Test
+    void jwtDecoderBean_isCreated() {
+        assertThat(jwtDecoder).isNotNull();
+    }
+    
+    @Test
+    void configProperties_areLoaded() {
+        assertThat(jwtConfig.getSecret())
+            .isEqualTo("my-super-secret-key-that-is-at-least-32-characters-long");
+        assertThat(jwtConfig.getExpirationMs()).isEqualTo(86400000L);
+        assertThat(jwtConfig.getIssuer()).isEqualTo("demo-app");
+        assertThat(jwtConfig.getAllowedAudiences()).containsExactly("web", "mobile");
+    }
+}
+```
+
+## **7. Minimal работающая конфигурация:**
+
+Если у вас возникают проблемы с зависимостями, вот минимальный работающий вариант:
+
+### **pom.xml (минимальный):**
+```xml
+<dependencies>
+    <!-- Основные Spring Boot зависимости -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-security</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+    </dependency>
+    
+    <!-- Для тестов -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-test</artifactId>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.security</groupId>
+        <artifactId>spring-security-test</artifactId>
+        <scope>test</scope>
+    </dependency>
+</dependencies>
+```
+
+### **JwtConfig.java (рабочий вариант):**
+```java
+package com.example.demo.config;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+
+@Configuration
+@ConfigurationProperties(prefix = "app.jwt")
+public class JwtConfig {
+    
+    private String secret;
+    private long expirationMs;
+    private String issuer;
+    private List<String> allowedAudiences;
+    
+    // геттеры и сеттеры
+    public String getSecret() { return secret; }
+    public void setSecret(String secret) { this.secret = secret; }
+    // ... остальные геттеры/сеттеры
+    
+    @Bean
+    public JwtDecoder jwtDecoder() {
+        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
+        SecretKey key = new SecretKeySpec(keyBytes, "HmacSHA256");
+        return NimbusJwtDecoder.withSecretKey(key).build();
+    }
+}
+```
+
+## **Проблемы и решения:**
+
+1. **Ошибка**: `Cannot resolve symbol 'Keys'`
+   **Решение**: Добавить зависимость jjwt или использовать `SecretKeySpec`
+
+2. **Ошибка**: `Cannot resolve symbol 'NimbusJwtDecoder'`
+   **Решение**: Убедиться, что есть `spring-boot-starter-oauth2-resource-server`
+
+3. **Секрет ключ слишком короткий**:
+   ```java
+   // Минимальная длина для HS256 - 32 байта (256 бит)
+   String secret = "my-super-secret-key-that-is-at-least-32-characters-long";
+   ```
+
+Теперь ваш JWT конфиг должен работать корректно! Все тесты должны компилироваться и выполняться.
+
+```
+
+
+

@@ -9,6 +9,7 @@ plugins {
     kotlin("plugin.serialization") version "1.9.25"
 //    id("me.champeau.jmh") version "0.7.2"
     kotlin("plugin.allopen") version "1.9.25"
+    kotlin("kapt") version "1.9.25" // Важно для MapStruct!
 }
 
 group = "tv.codealong.tutorials.springboot"
@@ -108,9 +109,20 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.5")
 
 
-    //MapStruct
-    implementation("org.mapstruct:mapstruct:1.5.5.Final")
-    implementation("org.mapstruct:mapstruct-processor:1.5.5.Final")
+    //MapStruct (решил обойтись без mapstruct, т.к. не взлетело и пока не стал разбираться)
+//    implementation("org.mapstruct:mapstruct:1.5.5.Final")
+//    implementation("org.mapstruct:mapstruct-processor:1.5.5.Final")
+//    kapt("org.mapstruct:mapstruct-processor:1.5.5.Final")
+
+    // Для совместимости Lombok и MapStruct (если используете Lombok)
+    compileOnly("org.projectlombok:lombok")
+    annotationProcessor("org.projectlombok:lombok")
+    // Но нужно настроить оба процессора для mapstruct
+    //annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final") // Для Java классов
+    //kapt("org.mapstruct:mapstruct-processor:1.5.5.Final") // Для Kotlin классов
+    kapt("org.projectlombok:lombok:1.18.32")
+    // Для совместимости Lombok + MapStruct
+    //kapt("org.projectlombok:lombok-mapstruct-binding:0.2.0")
 
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
     runtimeOnly("org.jetbrains.kotlin:kotlin-bom")
@@ -118,7 +130,6 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-slf4j")
 
-    compileOnly("org.projectlombok:lombok")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     runtimeOnly("com.h2database:h2")
     //        <dependency>
@@ -155,7 +166,7 @@ dependencies {
     testImplementation("io.ktor:ktor-client-content-negotiation:2.3.4")
     testImplementation("io.ktor:ktor-serialization-kotlinx-json:2.3.4")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.springframework.boot:spring-security-test")
+//    testImplementation("org.springframework.boot:spring-security-test")
     testImplementation("io.mockk:mockk:${mockkVersion}")
     testImplementation("com.ninja-squad:springmockk:${springmockkVersion}")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
@@ -196,6 +207,16 @@ allOpen {
     annotation("jakarta.persistence.MappedSuperclass")
     annotation("jakarta.persistence.Embeddable")
 //    annotation("org.openjdk.jmh.annotations.State")
+}
+
+// Конфигурация для kapt (Kotlin Annotation Processing)
+kapt {
+    keepJavacAnnotationProcessors = true
+//    arguments { //это закомментировал, т.к. не стал использовать mapstruct
+//        // Указываем componentModel для MapStruct
+//        arg("mapstruct.defaultComponentModel", "spring")
+//        arg("mapstruct.unmappedTargetPolicy", "IGNORE")
+//    }
 }
 
 

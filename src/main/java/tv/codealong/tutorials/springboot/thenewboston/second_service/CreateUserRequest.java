@@ -1,4 +1,4 @@
-package tv.codealong.tutorials.two;
+package tv.codealong.tutorials.springboot.thenewboston.second_service;
 
 
 import jakarta.validation.constraints.Email;

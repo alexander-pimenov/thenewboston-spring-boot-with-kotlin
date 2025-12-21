@@ -8,11 +8,16 @@ import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.context.annotation.Import
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers.print
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import tv.codealong.tutorials.springboot.thenewboston.second_service.GlobalExceptionHandler
+import tv.codealong.tutorials.springboot.thenewboston.second_service.TestSecurityConfig
+import tv.codealong.tutorials.springboot.thenewboston.second_service.UserMapper
+import tv.codealong.tutorials.springboot.thenewboston.second_service.ValidationConfig
 import tv.codealong.tutorials.springboot.thenewboston.service.WelcomeService
 
 /*
@@ -22,6 +27,7 @@ https://github.com/kriscfoster/spring-boot-testing-pyramid/tree/master/src
 */
 @DisplayName("Пример Integration-тестирования контроллера")
 @WebMvcTest(WelcomeController::class)
+@Import(TestSecurityConfig::class)
 internal class WelcomeControllerIntegrationTest @Autowired constructor(private val mockMvc: MockMvc) {
 
     //можно и так инжектить, а не через конструктор
