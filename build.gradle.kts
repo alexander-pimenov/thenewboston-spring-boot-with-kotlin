@@ -222,6 +222,11 @@ kapt {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+
+    testLogging {
+        events("passed", "failed", "skipped")
+        showStandardStreams = true
+    }
 }
 
 //эта таска нужна, если не использовать плагин jmh - id("me.champeau.jmh") version "0.7.2"

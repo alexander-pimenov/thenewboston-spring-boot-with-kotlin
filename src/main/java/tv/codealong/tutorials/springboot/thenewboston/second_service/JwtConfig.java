@@ -44,8 +44,12 @@ public class JwtConfig {
     @NotNull
     private List<String> allowedAudiences;
 
-    @Bean
+    @Bean("jwtDecoder")
     public JwtDecoder jwtDecoder() {
+        // Добавьте проверку на null
+        if (secret == null || secret.isEmpty()) {
+            throw new IllegalStateException("JWT secret is not configured");
+        }
         SecretKey key = Keys.hmacShaKeyFor(secret.getBytes());
         return NimbusJwtDecoder.withSecretKey(key).build();
     }
