@@ -48,13 +48,13 @@ class UserControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean (reset = MockReset.AFTER) // Сброс после каждого теста
+    @MockitoBean
     private UserService userService;
 
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockitoBean(reset = MockReset.AFTER)
+    @MockitoBean
     private PasswordEncoder passwordEncoder; // Если используется
 
 
