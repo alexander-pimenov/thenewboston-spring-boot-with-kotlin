@@ -1,15 +1,19 @@
 package tv.codealong.tutorials.springboot.thenewboston.second_service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class UserService {
     private final UserRepository userRepository;
     private final EmailService emailService;
@@ -28,7 +32,14 @@ public class UserService {
                 .build();
 
         User savedUser = userRepository.save(user);
-        emailService.sendWelcomeEmail(savedUser.getEmail());
+
+        try {
+            emailService.sendWelcomeEmail(savedUser.getEmail());
+        } catch (Exception e) {
+            // Логируем ошибку, но не прерываем создание пользователя
+            log.error("Failed to send welcome email to {}: {}", savedUser.getEmail(), e.getMessage());
+            // Можно сохранить в очередь для повторной отправки
+        }
 
         return savedUser;
     }

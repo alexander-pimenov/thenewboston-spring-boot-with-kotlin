@@ -74,6 +74,7 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310") //LocalDatetime
     implementation("com.fasterxml.jackson.core:jackson-annotations")
+    implementation("com.fasterxml.jackson.core:jackson-databind")
 
     //Gson
     implementation("com.google.code.gson:gson:2.11.0")
@@ -120,7 +121,7 @@ dependencies {
     // Но нужно настроить оба процессора для mapstruct
     //annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final") // Для Java классов
     //kapt("org.mapstruct:mapstruct-processor:1.5.5.Final") // Для Kotlin классов
-    kapt("org.projectlombok:lombok:1.18.32")
+    kapt("org.projectlombok:lombok")
     // Для совместимости Lombok + MapStruct
     //kapt("org.projectlombok:lombok-mapstruct-binding:0.2.0")
 

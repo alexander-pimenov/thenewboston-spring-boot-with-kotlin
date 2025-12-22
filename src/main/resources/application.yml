@@ -17,10 +17,16 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
       acks: all
-      retries: Integer.MAX_VALUE
+      retries: 2147483647
       enable-idempotence: true
       max-in-flight-requests-per-connection: 1
       ssl-provider: none
+      properties:
+        spring.json.add.type.headers: false
+    topics:
+      email: "email-events"
+      notification: "notification-events"
+      user: "user-events"
 #  настройка ObjectMapper (так же смотри в конфигурационных бинах)
   jackson:
     serialization:

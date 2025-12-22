@@ -1,9 +1,13 @@
 version: "3.9"
 services:
   zookeeper:
-    image: docker.io/confluentinc/cp-zookeeper:6.2.0
+    image: docker.io/confluentinc/cp-zookeeper:7.0.1
     container_name: zookeeper
+    restart: on-failure
+    mem_limit: 300m
     environment:
+      KAFKA_OPTS: >
+        -Dzookeeper.extendedTypesEnabled=true
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
       ALLOW_ANONYMOUS_LOGIN: "yes"
@@ -18,9 +22,11 @@ services:
     networks:
       - kafka-net
 
-  broker:
-    image: docker.io/confluentinc/cp-kafka:7.0.0
-    container_name: broker
+  kafka:
+    image: docker.io/confluentinc/cp-kafka:7.0.2
+    container_name: kafka
+    restart: on-failure
+    mem_limit: 1.5G
     depends_on:
       zookeeper:
         condition: service_healthy
@@ -31,14 +37,14 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
       KAFKA_LISTENERS: INSIDE://0.0.0.0:9092,OUTSIDE://0.0.0.0:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: INSIDE://localhost:9092,OUTSIDE://broker:29092
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://localhost:9092,OUTSIDE://kafka:29092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
       ALLOW_PLAINTEXT_LISTENER: "yes"
     healthcheck:
-      test: [ "CMD-SHELL", "echo 'test-message' | kafka-console-producer --broker-list kafka:9092 --topic health-check-topic && kafka-console-consumer --bootstrap-server kafka:9092 --topic health-check-topic --from-beginning --max-messages 1 | grep 'test-message'" ]
+      test: [ "CMD-SHELL", "echo 'test-message' | kafka-console-producer --broker-list kafka:29092 --topic health-check-topic && kafka-console-consumer --bootstrap-server kafka:29092 --topic health-check-topic --from-beginning --max-messages 1 | grep 'test-message'" ]
       interval: 10s
       timeout: 30s
       retries: 10
@@ -61,7 +67,7 @@ services:
       KAFKA_CLUSTERS_0_NAME: local
       #      KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS: localhost:9092
       #      KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS: kafka:9092,localhost:9093
-      KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS: kafka:29092
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
       KAFKA_CLUSTER_0_JMXPORT: 9997
       DYNAMIC_CONFIG_ENABLED: "true"
