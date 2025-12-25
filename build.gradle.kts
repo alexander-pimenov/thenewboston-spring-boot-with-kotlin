@@ -80,6 +80,8 @@ dependencies {
     implementation("com.google.code.gson:gson:2.11.0")
     //feign
     implementation("io.github.openfeign:feign-core:13.5")
+    //vavr
+    implementation("io.vavr:vavr:0.10.7")
 
     // https://mvnrepository.com/artifact/io.github.oshai/kotlin-logging-jvm
 //    implementation("io.github.microutils:koltin-logging-jvm:3.0.5") - не работает
