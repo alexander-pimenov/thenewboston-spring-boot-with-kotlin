@@ -12,6 +12,8 @@ plugins {
     kotlin("kapt") version "1.9.25" // Важно для MapStruct!
 }
 
+
+
 group = "tv.codealong.tutorials.springboot"
 version = "0.0.1-SNAPSHOT"
 description = "Demo project for Spring Boot and Kotlin and other interesting stuff"
@@ -20,9 +22,6 @@ java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
-}
-
-java {
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
 }
@@ -48,6 +47,17 @@ repositories {
     mavenCentral()
 //	maven { url = uri("https://repo.spring.io/milestone") }
 //	maven { url = uri("https://repo.spring.io/snapshot") }
+}
+
+tasks.withType<JavaCompile> {
+    options.encoding = "UTF-8"
+}
+
+tasks.withType<KotlinCompile> {
+    kotlinOptions {
+        jvmTarget = "21"
+        freeCompilerArgs = listOf("-Xjsr305=strict")
+    }
 }
 
 dependencies {
@@ -265,3 +275,7 @@ tasks.register<JavaExec>("jmh2") {
 //allOpen {
 //    annotation("org.openjdk.jmh.annotations.State")
 //}
+
+// Дополнительно: установить кодировку по умолчанию для Gradle
+// Это можно задать в gradle.properties, но если хочешь здесь:
+// System.setProperty("file.encoding", "UTF-8")
