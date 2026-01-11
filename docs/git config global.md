@@ -54,6 +54,7 @@ $RECYCLE.BIN/
 ```
 
 ### 2. **IDE и редакторы:**
+
 ```gitignore
 # VS Code
 .vscode/
@@ -64,7 +65,7 @@ $RECYCLE.BIN/
 *.code-workspace
 
 # JetBraны (IDEA, WebStorm и др.)
-.idea/
+../.idea/
 *.iml
 *.iws
 *.ipr
