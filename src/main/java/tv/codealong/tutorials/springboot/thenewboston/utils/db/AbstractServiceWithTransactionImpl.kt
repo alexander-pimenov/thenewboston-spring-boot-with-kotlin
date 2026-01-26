@@ -3,6 +3,7 @@ package tv.codealong.tutorials.springboot.thenewboston.utils.db
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.TransactionStatus
+import org.springframework.transaction.support.TransactionCallback
 import org.springframework.transaction.support.TransactionCallbackWithoutResult
 import org.springframework.transaction.support.TransactionTemplate
 import org.springframework.util.Assert
@@ -14,7 +15,10 @@ fun PlatformTransactionManager.withPropagation(levelPropagation: Int): Transacti
     tt
 }
 
-//from sputnik-app -> AbstractServiceWithTransactionImpl
+/**
+ * Абстрактный сервис для безопасной работы с транзакциями в Spring.
+ * Запрещает выполнение в "опасных" потоках (например, ForkJoinPool).
+ */
 abstract class AbstractServiceWithTransactionImpl(
     private val transactionManager: PlatformTransactionManager
 ) {
@@ -64,7 +68,47 @@ abstract class AbstractServiceWithTransactionImpl(
         })
     }
 
+    protected open fun <T> doInSeparatedTransaction(callback: TransactionCallback<T>): T? {
+        assertTransactionAllowed()
+        return transactionTemplate(TransactionDefinition.PROPAGATION_NEVER)
+            .let { tt ->
+                tt.execute {
+                    tt.propagationBehavior = TransactionDefinition.PROPAGATION_REQUIRES_NEW
+                    doInTransaction(tt, callback)
+                }
+            }
+    }
+
+    protected open fun doInOuterMandatoryTransactionWithoutResult(block: Consumer<TransactionStatus?>) {
+        assertTransactionAllowed()
+        val tt = transactionTemplate(TransactionDefinition.PROPAGATION_MANDATORY)
+        tt.execute(object : TransactionCallbackWithoutResult() {
+            override fun doInTransactionWithoutResult(transactionStatus: TransactionStatus) {
+                beforeTransaction()?.run()
+                try {
+                    block.accept(transactionStatus)
+                } finally {
+                    afterTransaction()?.run()
+                }
+            }
+        })
+    }
 
 
+    protected open fun <T> doInOuterMandatoryTransaction(callback: TransactionCallback<T>): T? {
+        assertTransactionAllowed()
+        return doInTransaction(transactionTemplate(TransactionDefinition.PROPAGATION_MANDATORY), callback)
+    }
 
+    private fun <T> doInTransaction(
+        tt: TransactionTemplate,
+        callback: TransactionCallback<T>
+    ): T? {
+        beforeTransaction()
+        return try {
+            tt.execute(callback)
+        } finally {
+            afterTransaction()
+        }
+    }
 }
